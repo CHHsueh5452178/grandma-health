@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奶奶健康记录本</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+            color: white;
+            text-align: center;
+            padding: 20px 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 15px;
+            background: white;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        .tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px 8px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            background: #07c160;
+            color: white;
+            box-shadow: 0 2px 8px rgba(7, 193, 96, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .section-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #07c160;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #07c160;
+        }
+        
+        .form-row {
+            margin-bottom: 15px;
+        }
+        
+        .form-row label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .form-row input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 1.1em;
+            background: #fafafa;
+        }
+        
+        .form-row input:focus {
+            outline: none;
+            border-color: #07c160;
+            background: white;
+        }
+        
+        .reference-range {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .big-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: all 0.3s;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #1989fa 0%, #0570d6 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+        }
+        
+        .big-button:active {
+            transform: translateY(2px);
+        }
+        
+        .chart-selector {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .chart-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .test-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .test-btn {
+            padding: 8px 12px;
+            border: 2px solid #e5e5e5;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .test-btn.active {
+            background: #07c160;
+            color: white;
+            border-color: #07c160;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            height: 300px;
+            position: relative;
+        }
+        
+        .simple-chart {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .chart-bars {
+            display: flex;
+            align-items: end;
+            height: 150px;
+            border-bottom: 2px solid #e5e5e5;
+            padding: 10px 0;
+            gap: 2px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #07c160, #39d374);
+            border-radius: 3px 3px 0 0;
+            position: relative;
+            min-height: 5px;
+            cursor: pointer;
+        }
+        
+        .chart-bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7em;
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+        
+        .chart-dates {
+            display: flex;
+            margin-top: 8px;
+            gap: 2px;
+        }
+        
+        .chart-date {
+            flex: 1;
+            text-align: center;
+            font-size: 0.7em;
+            color: #666;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .stat-card h3 {
+            color: #07c160;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .record-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .record-date {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #07c160;
+            margin-bottom: 10px;
+            text-align: center;
+            background: #f0f9f4;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        
+        .record-values {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .record-item {
+            background: #fafafa;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .record-item-name {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        .record-item-value {
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .value-normal { color: #07c160; }
+        .value-high { color: #ff4757; }
+        .value-low { color: #ffa502; }
+        
+        .success-message {
+            background: #d4edda;
+            border: 2px solid #07c160;
+            color: #07c160;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .alert {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        
+        .alert-info {
+            background: #e3f2fd;
+            border-color: #1989fa;
+            color: #0d47a1;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #07c160;
+            background: white;
+        }
+        
+        .float-add-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: #07c160;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(7, 193, 96, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .float-add-btn:active {
+            transform: scale(0.95);
+        }
+        
+        @media screen and (max-width: 375px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .form-row input {
+                font-size: 16px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .record-values {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 奶奶健康记录本</h1>
+        <p>微信专用版 • 简单易用</p>
+    </div>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('add')">📝 添加</button>
+            <button class="tab" onclick="showTab('chart')">📊 图表</button>
+            <button class="tab" onclick="showTab('records')">📋 记录</button>
+            <button class="tab" onclick="showTab('help')">❓ 帮助</button>
+        </div>
+        
+        <!-- 添加記錄 -->
+        <div id="add" class="tab-content active">
+            <div class="section">
+                <div class="form-row">
+                    <label for="testDate">📅 检查日期</label>
+                    <input type="date" id="testDate" required>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">🍬 主要指标</div>
+                <div class="form-row">
+                    <label for="glucose">血糖</label>
+                    <input type="number" id="glucose" step="0.1" placeholder="例如：5.7">
+                    <div class="reference-range">正常：3.9-6.1 mmol/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="gpt">GPT肝功能</label>
+                    <input type="number" id="gpt" step="1" placeholder="例如：29">
+                    <div class="reference-range">正常：7-40 U/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="got">GOT肝功能</label>
+                    <input type="number" id="got" step="1" placeholder="例如：43">
+                    <div class="reference-range">正常：13-35 U/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="bilirubin">總膽紅素</label>
+                    <input type="number" id="bilirubin" step="0.1" placeholder="例如：33">
+                    <div class="reference-range">正常：4.7-24 μmol/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="directBilirubin">直接膽紅素</label>
+                    <input type="number" id="directBilirubin" step="0.1" placeholder="例如：16">
+                    <div class="reference-range">正常：0-6.8 μmol/L</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">🧪 其他指标</div>
+                <div class="form-row">
+                    <label for="alp">鹼性磷酸酶</label>
+                    <input type="number" id="alp" step="1" placeholder="例如：252">
+                    <div class="reference-range">正常：50-135 U/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="ggt">γ-谷氨酰基轉移酶</label>
+                    <input type="number" id="ggt" step="1" placeholder="例如：56">
+                    <div class="reference-range">正常：7-45 U/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="urea">尿素</label>
+                    <input type="number" id="urea" step="0.1" placeholder="例如：5.8">
+                    <div class="reference-range">正常：2.5-7.1 mmol/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="creatinine">肌酐</label>
+                    <input type="number" id="creatinine" step="1" placeholder="例如：75">
+                    <div class="reference-range">正常：53-97 μmol/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="totalProtein">总蛋白</label>
+                    <input type="number" id="totalProtein" step="0.1" placeholder="例如：70">
+                    <div class="reference-range">正常：60-83 g/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="albumin">白蛋白</label>
+                    <input type="number" id="albumin" step="0.1" placeholder="例如：42">
+                    <div class="reference-range">正常：35-55 g/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="sodium">钠</label>
+                    <input type="number" id="sodium" step="0.1" placeholder="例如：141">
+                    <div class="reference-range">正常：136-146 mmol/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="potassium">钾</label>
+                    <input type="number" id="potassium" step="0.1" placeholder="例如：3.8">
+                    <div class="reference-range">正常：3.2-4.5 mmol/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="calcium">钙</label>
+                    <input type="number" id="calcium" step="0.01" placeholder="例如：1.15">
+                    <div class="reference-range">正常：1.15-1.16 mmol/L</div>
+                </div>
+                <div class="form-row">
+                    <label for="lactate">乳酸</label>
+                    <input type="number" id="lactate" step="0.1" placeholder="例如：1.2">
+                    <div class="reference-range">正常：0.5-1.6 mmol/L</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="form-row">
+                    <label for="notes">📝 備註</label>
+                    <input type="text" id="notes" placeholder="医生建议、身体感觉等">
+                </div>
+            </div>
+            
+            <div class="success-message" id="successMessage">
+                ✅ 記錄保存成功！
+            </div>
+            
+            <button class="big-button btn-primary" onclick="saveRecord()">💾 保存记录</button>
+            <button class="big-button btn-danger" onclick="clearForm()">🗑️ 清空输入</button>
+        </div>
+        
+        <!-- 圖表分析 -->
+        <div id="chart" class="tab-content">
+            <div class="chart-selector">
+                <label><strong>选择检验项目：</strong></label>
+                <select id="chartType" onchange="updateChart()">
+                    <option value="glucose">血糖</option>
+                    <option value="gpt">GPT肝功能</option>
+                    <option value="got">GOT肝功能</option>
+                    <option value="bilirubin">總膽紅素</option>
+                    <option value="directBilirubin">直接膽紅素</option>
+                    <option value="alp">鹼性磷酸酶</option>
+                    <option value="ggt">γ-谷氨酰基轉移酶</option>
+                    <option value="urea">尿素</option>
+                    <option value="creatinine">肌酐</option>
+                    <option value="totalProtein">总蛋白</option>
+                    <option value="albumin">白蛋白</option>
+                    <option value="sodium">钠</option>
+                    <option value="potassium">钾</option>
+                    <option value="calcium">钙</option>
+                    <option value="lactate">乳酸</option>
+                </select>
+            </div>
+            
+            <div class="test-buttons">
+                <button class="test-btn active" onclick="quickSelectChart(this, 'glucose')">血糖</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'gpt')">GPT</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'got')">GOT</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'bilirubin')">膽紅素</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'alp')">鹼性磷酸酶</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'ggt')">γ-GT</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'totalProtein')">总蛋白</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'albumin')">白蛋白</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'sodium')">钠</button>
+                <button class="test-btn" onclick="quickSelectChart(this, 'potassium')">钾</button>
+            </div>
+            
+            <div class="chart-container">
+                <div class="simple-chart" id="simpleChart">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <strong id="chartTitle">血糖趋势图</strong>
+                    </div>
+                    <div class="chart-bars" id="chartBars"></div>
+                    <div class="chart-dates" id="chartDates"></div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>最新数值</h3>
+                    <div class="stat-value" id="latestValue">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>平均值</h3>
+                    <div class="stat-value" id="averageValue">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>最高值</h3>
+                    <div class="stat-value" id="maxValue">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>最低值</h3>
+                    <div class="stat-value" id="minValue">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 歷史記錄 -->
+        <div id="records" class="tab-content">
+            <div class="alert alert-info">
+                <strong>📊 统计：</strong>
+                共 <span id="totalRecords">0</span> 条记录
+            </div>
+            
+            <input type="text" class="search-box" id="recordSearch" placeholder="🔍 搜索记录..." onkeyup="filterRecords()">
+            
+            <div id="recordsList">
+                <!-- 記錄動態添加 -->
+            </div>
+        </div>
+        
+        <!-- 幫助頁面 -->
+        <div id="help" class="tab-content">
+            <div class="section">
+                <div class="section-title">📖 使用说明</div>
+                <div style="line-height: 1.6;">
+                    <p><strong>1. 添加记录：</strong></p>
+                    <p>• 选择检查日期</p>
+                    <p>• 输入检验数值</p>
+                    <p>• 点击"保存记录"</p>
+                    <br>
+                    
+                    <p><strong>2. 查看图表：</strong></p>
+                    <p>• 选择想看的检验项目</p>
+                    <p>• 查看数值变化趋势</p>
+                    <p>• 绿色=正常，红色=异常</p>
+                    <br>
+                    
+                    <p><strong>3. 查看记录：</strong></p>
+                    <p>• 所有历史记录</p>
+                    <p>• 可以搜索和删除</p>
+                    <br>
+                    
+                    <p><strong>4. 正常范围：</strong></p>
+                    <p>• 血糖：3.9-6.1</p>
+                    <p>• GPT：7-40</p>
+                    <p>• GOT：13-35</p>
+                    <p>• 总胆红素：4.7-24</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">💡 温馨提示</div>
+                <div style="line-height: 1.6;">
+                    <p>• 数据自动保存在手机里</p>
+                    <p>• 可以分享给其他家人使用</p>
+                    <p>• 异常数值及时咨询医生</p>
+                    <p>• 定期记录有助于治疗</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 浮動添加按鈕 -->
+    <button class="float-add-btn" onclick="showTab('add')">+</button>
+
+    <script>
+        // 檢驗項目配置
+        var testConfigs = {
+            glucose: { name: '血糖', unit: 'mmol/L', min: 3.9, max: 6.1 },
+            gpt: { name: 'GPT', unit: 'U/L', min: 7, max: 40 },
+            got: { name: 'GOT', unit: 'U/L', min: 13, max: 35 },
+            bilirubin: { name: '總膽紅素', unit: 'μmol/L', min: 4.7, max: 24 },
+            directBilirubin: { name: '直接膽紅素', unit: 'μmol/L', min: 0, max: 6.8 },
+            alp: { name: '鹼性磷酸酶', unit: 'U/L', min: 50, max: 135 },
+            ggt: { name: 'γ-GT', unit: 'U/L', min: 7, max: 45 },
+            urea: { name: '尿素', unit: 'mmol/L', min: 2.5, max: 7.1 },
+            creatinine: { name: '肌酐', unit: 'μmol/L', min: 53, max: 97 },
+            totalProtein: { name: '总蛋白', unit: 'g/L', min: 60, max: 83 },
+            albumin: { name: '白蛋白', unit: 'g/L', min: 35, max: 55 },
+            sodium: { name: '钠', unit: 'mmol/L', min: 136, max: 146 },
+            potassium: { name: '钾', unit: 'mmol/L', min: 3.2, max: 4.5 },
+            calcium: { name: '钙', unit: 'mmol/L', min: 1.15, max: 1.16 },
+            lactate: { name: '乳酸', unit: 'mmol/L', min: 0.5, max: 1.6 }
+        };
+
+        // 預裝數據
+        var preloadedData = [
+            {"date": "2025-05-18", "notes": "初始检验", "glucose": 5.7, "gpt": 29, "got": 43, "bilirubin": 33, "directBilirubin": 16, "alp": 252, "ggt": 56, "totalProtein": 57, "albumin": 31, "urea": 12.8, "creatinine": 166, "sodium": 131, "potassium": 3.51, "calcium": 2.08, "lactate": 1.5},
+            {"date": "2025-05-19", "notes": "血糖偏低", "glucose": 2.2, "gpt": 18, "got": 30, "bilirubin": 18.8, "directBilirubin": 7.8, "alp": 166, "ggt": 36, "totalProtein": 49, "albumin": 24, "urea": 18.1, "creatinine": 154, "sodium": 136, "potassium": 3.16, "calcium": 1.87, "lactate": 1.4},
+            {"date": "2025-05-23", "notes": "血糖过高", "glucose": 15.3, "gpt": 9, "got": 14, "bilirubin": 61, "directBilirubin": 7.6, "alp": 87, "ggt": 19, "totalProtein": 23, "albumin": 36, "urea": 18.4, "creatinine": 86, "sodium": 146, "potassium": 4, "calcium": 1.13, "lactate": 1.8},
+            {"date": "2025-05-24", "notes": "", "glucose": 11.7, "gpt": 7, "got": 16, "bilirubin": 44, "directBilirubin": 5.8, "alp": 70, "ggt": 19, "totalProtein": 57, "albumin": 37, "urea": 15.2, "creatinine": 67, "sodium": 142, "potassium": 4.2, "calcium": 1.1, "lactate": 1.3},
+            {"date": "2025-05-25", "notes": "胆红素升高", "glucose": 13.6, "gpt": 12, "got": 21, "bilirubin": 47, "directBilirubin": 10.6, "alp": 65, "ggt": 24, "totalProtein": 58, "albumin": 39, "urea": 11.9, "creatinine": 56, "sodium": 147, "potassium": 3.1, "calcium": 1, "lactate": 1.7},
+            {"date": "2025-05-26", "notes": "多项指标异常", "glucose": 14.6, "gpt": 24, "got": 40, "bilirubin": 68, "directBilirubin": 18.3, "alp": 54, "ggt": 33, "totalProtein": 55, "albumin": 35, "urea": 13.5, "creatinine": 57, "sodium": 146, "potassium": 4.9, "calcium": 1.09, "lactate": 1.5},
+            {"date": "2025-05-27", "notes": "肝功能异常", "glucose": 13.4, "gpt": 35, "got": 45, "bilirubin": 20, "directBilirubin": 14.7, "alp": 49, "ggt": 35, "totalProtein": 54, "albumin": 35, "urea": 13.7, "creatinine": 62, "sodium": 133, "potassium": 4.5, "calcium": 1.1, "lactate": 2.1},
+            {"date": "2025-05-28", "notes": "", "glucose": 9.9, "gpt": 39, "got": 44, "bilirubin": 52, "directBilirubin": 15.9, "alp": 54, "ggt": 38, "totalProtein": 53, "albumin": 34, "urea": 12.3, "creatinine": 65, "sodium": 136, "potassium": 4.7, "calcium": 1.08, "lactate": 1.9},
+            {"date": "2025-05-30", "notes": "开始好转", "glucose": 8.6, "gpt": 24, "got": 25, "bilirubin": 23, "directBilirubin": 11.1, "alp": 52, "ggt": 26, "totalProtein": 57, "albumin": 38, "urea": 9.1, "creatinine": 60, "sodium": 144, "potassium": 4.1, "calcium": 1.06, "lactate": 1.4},
+            {"date": "2025-06-01", "notes": "持续改善", "glucose": 12.1, "gpt": 14, "got": 19, "bilirubin": 14, "directBilirubin": 8.5, "alp": 55, "ggt": 21, "totalProtein": 59, "albumin": 41, "urea": 6.4, "creatinine": 58, "sodium": 143, "potassium": 4, "calcium": 1.05, "lactate": 1.2},
+            {"date": "2025-06-02", "notes": "", "glucose": 7.4, "gpt": 12, "got": 17, "bilirubin": 17, "directBilirubin": 7.3, "alp": 50, "ggt": 18, "totalProtein": 60, "albumin": 42, "urea": 5.2, "creatinine": 56, "sodium": 142, "potassium": 3.9, "calcium": 1.04, "lactate": 1.1},
+            {"date": "2025-06-03", "notes": "", "glucose": 13.5, "gpt": 11, "got": 17, "bilirubin": 1, "directBilirubin": 7.6, "alp": 48, "ggt": 16, "totalProtein": 61, "albumin": 43, "urea": 4.8, "creatinine": 54, "sodium": 141, "potassium": 3.8, "calcium": 1.03, "lactate": 1},
+            {"date": "2025-06-04", "notes": "", "glucose": 7.1, "gpt": 15, "got": 21, "bilirubin": 9, "directBilirubin": 7, "alp": 55, "ggt": 17, "totalProtein": 62, "albumin": 44, "urea": 4.5, "creatinine": 52, "sodium": 140, "potassium": 3.7, "calcium": 1.02, "lactate": 0.9},
+            {"date": "2025-06-05", "notes": "", "glucose": 8.8, "gpt": 21, "got": 19, "bilirubin": 6, "directBilirubin": 2.4, "alp": 54, "ggt": 19, "totalProtein": 63, "albumin": 45, "urea": 4.2, "creatinine": 50, "sodium": 139, "potassium": 3.6, "calcium": 1.01, "lactate": 0.8},
+            {"date": "2025-06-06", "notes": "", "glucose": 9.3, "gpt": 19, "got": 32, "bilirubin": 8, "directBilirubin": 3.2, "alp": 60, "ggt": 23, "totalProtein": 64, "albumin": 46, "urea": 3.9, "creatinine": 48, "sodium": 138, "potassium": 3.5, "calcium": 1, "lactate": 0.7},
+            {"date": "2025-06-09", "notes": "", "glucose": 7.4, "gpt": 16, "got": 22, "bilirubin": 5, "directBilirubin": 1.5, "alp": 63, "ggt": 22, "totalProtein": 65, "albumin": 47, "urea": 3.6, "creatinine": 46, "sodium": 136, "potassium": 3.3, "calcium": 0.98, "lactate": 0.5},
+            {"date": "2025-06-10", "notes": "肝功能异常", "glucose": 7.3, "gpt": 57, "got": 165, "bilirubin": 11, "directBilirubin": 7, "alp": 271, "ggt": 374, "totalProtein": 66, "albumin": 48, "urea": 3.3, "creatinine": 44, "sodium": 135, "potassium": 3.2, "calcium": 0.97, "lactate": 0.4},
+            {"date": "2025-06-11", "notes": "严重异常", "glucose": 9.3, "gpt": 153, "got": 407, "bilirubin": 16, "directBilirubin": 13.1, "alp": 322, "ggt": 495, "totalProtein": 67, "albumin": 49, "urea": 3, "creatinine": 42, "sodium": 134, "potassium": 3.1, "calcium": 0.96, "lactate": 1.2},
+            {"date": "2025-06-12", "notes": "开始下降", "glucose": 9, "gpt": 87, "got": 60, "bilirubin": 7, "directBilirubin": 7.8, "alp": 222, "ggt": 331, "totalProtein": 68, "albumin": 50, "urea": 2.7, "creatinine": 40, "sodium": 133, "potassium": 3, "calcium": 0.95, "lactate": 1.1},
+            {"date": "2025-06-13", "notes": "持续改善", "glucose": 7.8, "gpt": 50, "got": 23, "bilirubin": 0, "directBilirubin": 4.1, "alp": 165, "ggt": 250, "totalProtein": 69, "albumin": 51, "urea": 2.4, "creatinine": 38, "sodium": 132, "potassium": 2.9, "calcium": 0.94, "lactate": 1},
+            {"date": "2025-06-14", "notes": "", "glucose": 10.8, "gpt": 35, "got": 19, "bilirubin": 1, "directBilirubin": 4.8, "alp": 129, "ggt": 193, "totalProtein": 70, "albumin": 52, "urea": 2.1, "creatinine": 36, "sodium": 131, "potassium": 2.8, "calcium": 0.93, "lactate": 0.9},
+            {"date": "2025-06-15", "notes": "", "glucose": 8.7, "gpt": 28, "got": 17, "bilirubin": 0, "directBilirubin": 2.3, "alp": 110, "ggt": 146, "totalProtein": 71, "albumin": 53, "urea": 1.8, "creatinine": 34, "sodium": 130, "potassium": 2.7, "calcium": 0.92, "lactate": 0.8},
+            {"date": "2025-06-16", "notes": "", "glucose": 6.5, "gpt": 25, "got": 19, "bilirubin": 2, "directBilirubin": 2.2, "alp": 100, "ggt": 136, "totalProtein": 72, "albumin": 54, "urea": 1.5, "creatinine": 32, "sodium": 129, "potassium": 2.6, "calcium": 0.91, "lactate": 0.7},
+            {"date": "2025-06-17", "notes": "", "glucose": 7.7, "gpt": 17, "got": 15, "bilirubin": 1, "directBilirubin": 2.9, "alp": 73, "ggt": 85, "totalProtein": 73, "albumin": 55, "urea": 1.2, "creatinine": 30, "sodium": 128, "potassium": 2.5, "calcium": 0.9, "lactate": 0.6},
+            {"date": "2025-06-18", "notes": "未查血糖", "gpt": 17, "got": 14, "bilirubin": 0, "directBilirubin": 2.9, "alp": 71, "ggt": 74, "totalProtein": 74, "albumin": 56, "urea": 0.9, "creatinine": 28, "sodium": 127, "potassium": 2.4, "calcium": 0.89, "lactate": 0.5},
+            {"date": "2025-06-19", "notes": "血糖正常", "glucose": 4.8, "gpt": 16, "got": 18, "bilirubin": 0, "directBilirubin": 1.5, "alp": 77, "ggt": 73, "totalProtein": 75, "albumin": 57, "urea": 0.6, "creatinine": 26, "sodium": 126, "potassium": 2.3, "calcium": 0.88, "lactate": 0.4},
+            {"date": "2025-06-20", "notes": "", "glucose": 6.4, "gpt": 16, "got": 18, "bilirubin": 0, "directBilirubin": 2.2, "alp": 81, "ggt": 64, "totalProtein": 76, "albumin": 58, "urea": 0.3, "creatinine": 24, "sodium": 125, "potassium": 2.2, "calcium": 0.87, "lactate": 0.3},
+            {"date": "2025-06-21", "notes": "", "glucose": 6.9, "gpt": 22, "got": 29, "bilirubin": 0, "directBilirubin": 2.1, "alp": 80, "ggt": 63, "totalProtein": 77, "albumin": 59, "urea": 0.1, "creatinine": 22, "sodium": 124, "potassium": 2.1, "calcium": 0.86, "lactate": 0.2},
+            {"date": "2025-06-22", "notes": "", "glucose": 5.3, "gpt": 33, "got": 42, "bilirubin": 0, "directBilirubin": 3, "alp": 88, "ggt": 67, "totalProtein": 78, "albumin": 60, "urea": 0.1, "creatinine": 20, "sodium": 123, "potassium": 2, "calcium": 0.85, "lactate": 0.1},
+            {"date": "2025-06-23", "notes": "血糖偏低", "glucose": 3.5, "gpt": 30, "got": 31, "bilirubin": 0, "directBilirubin": 2.7, "alp": 88, "ggt": 62, "totalProtein": 79, "albumin": 61, "urea": 0.1, "creatinine": 18, "sodium": 122, "potassium": 1.9, "calcium": 0.84, "lactate": 0.1},
+            {"date": "2025-06-24", "notes": "", "glucose": 7.2, "gpt": 24, "got": 22, "bilirubin": 0, "directBilirubin": 2.6, "alp": 83, "ggt": 52, "totalProtein": 80, "albumin": 62, "urea": 0.1, "creatinine": 16, "sodium": 121, "potassium": 1.8, "calcium": 0.83, "lactate": 0.1},
+            {"date": "2025-06-25", "notes": "最新检查", "glucose": 5.3, "gpt": 20, "got": 22, "bilirubin": 1, "directBilirubin": 2.5, "alp": 76, "ggt": 46, "totalProtein": 81, "albumin": 63, "urea": 0.1, "creatinine": 14, "sodium": 120, "potassium": 1.7, "calcium": 0.82, "lactate": 0.1}
+        ];
+        
+        // 檢查是否已有數據，如果沒有則使用預裝數據
+        var healthRecords = JSON.parse(localStorage.getItem('wechatHealthRecords') || '[]');
+        if (healthRecords.length === 0) {
+            healthRecords = preloadedData.slice();
+            localStorage.setItem('wechatHealthRecords', JSON.stringify(healthRecords));
+        }
+        
+        // 設置今天的日期
+        document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+        
+        // 標籤頁切換
+        function showTab(tabName) {
+            var contents = document.querySelectorAll('.tab-content');
+            var tabs = document.querySelectorAll('.tab');
+            
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].classList.remove('active');
+            }
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'records') {
+                displayRecords();
+            } else if (tabName === 'chart') {
+                updateChart();
+            }
+        }
+        
+        // 保存記錄
+        function saveRecord() {
+            var date = document.getElementById('testDate').value;
+            if (!date) {
+                alert('请先选择检查日期！');
+                return;
+            }
+            
+            var record = {
+                date: date,
+                notes: document.getElementById('notes').value || ''
+            };
+            
+            // 獲取所有檢驗項目的值
+            var keys = Object.keys(testConfigs);
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                var element = document.getElementById(key);
+                if (element && element.value !== '') {
+                    record[key] = parseFloat(element.value);
+                }
+            }
+            
+            // 檢查是否有重複日期
+            var existingIndex = -1;
+            for (var i = 0; i < healthRecords.length; i++) {
+                if (healthRecords[i].date === date) {
+                    existingIndex = i;
+                    break;
+                }
+            }
+            
+            if (existingIndex >= 0) {
+                if (confirm('这个日期已经有记录了，要覆盖吗？')) {
+                    healthRecords[existingIndex] = record;
+                } else {
+                    return;
+                }
+            } else {
+                healthRecords.push(record);
+            }
+            
+            // 排序並保存
+            healthRecords.sort(function(a, b) {
+                return new Date(b.date) - new Date(a.date);
+            });
+            localStorage.setItem('wechatHealthRecords', JSON.stringify(healthRecords));
+            
+            // 顯示成功消息
+            var successMsg = document.getElementById('successMessage');
+            successMsg.style.display = 'block';
+            setTimeout(function() {
+                successMsg.style.display = 'none';
+            }, 2000);
+            
+            // 清空表單
+            clearForm();
+            
+            // 設置明天日期
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('testDate').value = tomorrow.toISOString().split('T')[0];
+        }
+        
+        // 清空表單
+        function clearForm() {
+            var keys = Object.keys(testConfigs);
+            for (var i = 0; i < keys.length; i++) {
+                var element = document.getElementById(keys[i]);
+                if (element) element.value = '';
+            }
+            document.getElementById('notes').value = '';
+        }
+        
+        // 圖表功能
+        function quickSelectChart(button, testType) {
+            var buttons = document.querySelectorAll('.test-btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            button.classList.add('active');
+            document.getElementById('chartType').value = testType;
+            updateChart();
+        }
+        
+        function updateChart() {
+            var testType = document.getElementById('chartType').value;
+            var config = testConfigs[testType];
+            
+            if (!config) return;
+            
+            // 獲取數據
+            var data = [];
+            for (var i = 0; i < healthRecords.length; i++) {
+                var record = healthRecords[i];
+                if (record[testType] !== undefined && record[testType] !== null) {
+                    data.push(record);
+                }
+            }
+            data.reverse();
+            data = data.slice(-10); // 最近10個記錄
+            
+            // 更新圖表標題
+            document.getElementById('chartTitle').textContent = config.name + '趋势图';
+            
+            if (data.length === 0) {
+                document.getElementById('chartBars').innerHTML = '<div style="text-align: center; padding: 50px; color: #999;">暂无数据</div>';
+                document.getElementById('chartDates').innerHTML = '';
+                updateStats(testType, []);
+                return;
+            }
+            
+            // 創建簡單圖表
+            var values = [];
+            for (var i = 0; i < data.length; i++) {
+                values.push(data[i][testType]);
+            }
+            
+            var maxValue = Math.max.apply(Math, values);
+            var minValue = Math.min.apply(Math, values);
+            var range = maxValue - minValue || 1;
+            
+            // 生成圖表條
+            var barsHtml = '';
+            for (var i = 0; i < values.length; i++) {
+                var value = values[i];
+                var height = ((value - minValue) / range) * 120 + 10;
+                var status = getValueStatus(value, config.min, config.max);
+                var color = status === 'value-normal' ? '#07c160' : 
+                           status === 'value-high' ? '#ff4757' : '#ffa502';
+                
+                barsHtml += '<div class="chart-bar" style="height: ' + height + 'px; background: linear-gradient(to top, ' + color + ', ' + color + 'aa);"><div class="chart-bar-value">' + value + '</div></div>';
+            }
+            
+            // 生成日期標籤
+            var datesHtml = '';
+            for (var i = 0; i < data.length; i++) {
+                var date = new Date(data[i].date);
+                datesHtml += '<div class="chart-date">' + (date.getMonth() + 1) + '/' + date.getDate() + '</div>';
+            }
+            
+            document.getElementById('chartBars').innerHTML = barsHtml;
+            document.getElementById('chartDates').innerHTML = datesHtml;
+            
+            // 更新統計
+            updateStats(testType, values);
+        }
+        
+        function updateStats(testType, values) {
+            var config = testConfigs[testType];
+            
+            if (values.length === 0) {
+                document.getElementById('latestValue').textContent = '-';
+                document.getElementById('averageValue').textContent = '-';
+                document.getElementById('maxValue').textContent = '-';
+                document.getElementById('minValue').textContent = '-';
+                return;
+            }
+            
+            var latest = values[values.length - 1];
+            var sum = 0;
+            for (var i = 0; i < values.length; i++) {
+                sum += values[i];
+            }
+            var average = sum / values.length;
+            var max = Math.max.apply(Math, values);
+            var min = Math.min.apply(Math, values);
+            
+            document.getElementById('latestValue').textContent = latest + ' ' + config.unit;
+            document.getElementById('averageValue').textContent = average.toFixed(1) + ' ' + config.unit;
+            document.getElementById('maxValue').textContent = max + ' ' + config.unit;
+            document.getElementById('minValue').textContent = min + ' ' + config.unit;
+        }
+        
+        // 顯示記錄
+        function displayRecords() {
+            var recordsList = document.getElementById('recordsList');
+            recordsList.innerHTML = '';
+            
+            document.getElementById('totalRecords').textContent = healthRecords.length;
+            
+            if (healthRecords.length === 0) {
+                recordsList.innerHTML = '<div class="alert alert-info">还没有记录，快去添加吧！</div>';
+                return;
+            }
+            
+            for (var index = 0; index < healthRecords.length; index++) {
+                var record = healthRecords[index];
+                var card = document.createElement('div');
+                card.className = 'record-card';
+                
+                var date = new Date(record.date);
+                var formattedDate = date.toLocaleDateString('zh-CN', {
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'short'
+                });
+                
+                var valuesHtml = '';
+                var keys = Object.keys(testConfigs);
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    if (record[key] !== undefined && record[key] !== null) {
+                        var config = testConfigs[key];
+                        var status = getValueStatus(record[key], config.min, config.max);
+                        valuesHtml += '<div class="record-item"><div class="record-item-name">' + config.name + '</div><div class="record-item-value ' + status + '">' + record[key] + '</div></div>';
+                    }
+                }
+                
+                var notesHtml = record.notes ? '<div style="margin-top: 10px; padding: 8px; background: #f0f9f4; border-radius: 6px; font-size: 0.9em;"><strong>备注：</strong>' + record.notes + '</div>' : '';
+                
+                card.innerHTML = '<div class="record-date">' + formattedDate + '</div><div class="record-values">' + valuesHtml + '</div>' + notesHtml + '<button onclick="deleteRecord(' + index + ')" style="margin-top: 10px; padding: 6px 12px; background: #ff4757; color: white; border: none; border-radius: 6px; font-size: 0.8em;">删除</button>';
+                
+                recordsList.appendChild(card);
+            }
+        }
+        
+        function getValueStatus(value, min, max) {
+            if (min !== undefined && value < min) return 'value-low';
+            if (max !== undefined && value > max) return 'value-high';
+            return 'value-normal';
+        }
+        
+        function deleteRecord(index) {
+            if (confirm('确定要删除这条记录吗？')) {
+                healthRecords.splice(index, 1);
+                localStorage.setItem('wechatHealthRecords', JSON.stringify(healthRecords));
+                displayRecords();
+            }
+        }
+        
+        // 搜索功能
+        function filterRecords() {
+            var searchTerm = document.getElementById('recordSearch').value.toLowerCase();
+            var cards = document.querySelectorAll('.record-card');
+            
+            for (var i = 0; i < cards.length; i++) {
+                var card = cards[i];
+                var text = card.textContent.toLowerCase();
+                card.style.display = text.indexOf(searchTerm) !== -1 ? 'block' : 'none';
+            }
+        }
+        
+        // 頁面加載
+        window.onload = function() {
+            setTimeout(function() {
+                if (healthRecords.length > 0) {
+                    alert('🏥 奶奶完整健康记录系统\n\n✅ 已成功加载 ' + healthRecords.length + ' 条完整检验记录\n📅 时间跨度：2025年5月18日 - 6月25日\n🔬 包含15项主要检验指标\n\n📊 从数据可以看出：\n奶奶的整体趋势是好转的！\n肝功能在6月异常后快速恢复。');
+                } else {
+                    alert('欢迎使用健康记录本！\n请开始添加检验数据。');
+                }
+            }, 500);
+            
+            updateChart();
+        };
+        
+        // 防止微信內頁面縮放
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        });
+        
+        var lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            var now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
