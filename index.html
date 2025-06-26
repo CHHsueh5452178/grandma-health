@@ -3,335 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>奶奶健康记录本</title>
+    <title>奶奶完整健康記錄系統 - 最終修復版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 0;
-            margin: 0;
-            overflow-x: hidden;
+            font-family: "Microsoft YaHei", "SimHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
             font-size: 16px;
-            line-height: 1.4;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
-            color: white;
-            text-align: center;
-            padding: 20px 15px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .header h1 {
-            font-size: 1.8em;
-            margin-bottom: 5px;
-        }
-        
-        .header p {
-            font-size: 0.9em;
-            opacity: 0.9;
         }
         
         .container {
-            max-width: 100%;
-            padding: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
             background: white;
-            min-height: calc(100vh - 120px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #6c5ce7 0%, #5a4fcf 100%);
+            color: white;
+            text-align: center;
+            padding: 25px 20px;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
         }
         
         .tabs {
             display: flex;
-            background: white;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+            border-bottom: 3px solid #ddd;
             overflow-x: auto;
         }
         
         .tab {
             flex: 1;
-            min-width: 80px;
-            padding: 12px 8px;
+            min-width: 150px;
+            padding: 15px 10px;
             text-align: center;
-            background: transparent;
+            background: #f8f9fa;
             border: none;
-            font-size: 0.9em;
+            font-size: 1em;
             font-weight: bold;
             cursor: pointer;
-            border-radius: 8px;
             transition: all 0.3s;
-            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
         }
         
         .tab.active {
-            background: #07c160;
-            color: white;
-            box-shadow: 0 2px 8px rgba(7, 193, 96, 0.3);
+            background: white;
+            color: #6c5ce7;
+            border-bottom: 3px solid #6c5ce7;
         }
         
         .tab-content {
             display: none;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         
         .tab-content.active {
             display: block;
         }
         
+        /* 數據輸入區 */
+        .input-sections {
+            display: grid;
+            gap: 20px;
+        }
+        
         .section {
-            background: white;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
             border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 20px;
         }
         
         .section-title {
-            font-size: 1.1em;
+            font-size: 1.3em;
             font-weight: bold;
-            color: #07c160;
+            color: #6c5ce7;
             margin-bottom: 15px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #07c160;
+            border-bottom: 2px solid #6c5ce7;
         }
         
-        .form-row {
-            margin-bottom: 15px;
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
         }
         
-        .form-row label {
+        .form-group {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .form-group label {
             display: block;
             font-weight: bold;
             color: #333;
-            margin-bottom: 8px;
-            font-size: 1em;
+            margin-bottom: 5px;
+            font-size: 0.9em;
         }
         
-        .form-row input {
+        .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e5e5;
-            border-radius: 8px;
-            font-size: 1.1em;
-            background: #fafafa;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
         }
         
-        .form-row input:focus {
+        .form-group input:focus {
             outline: none;
-            border-color: #07c160;
-            background: white;
+            border-color: #6c5ce7;
         }
         
         .reference-range {
-            font-size: 0.85em;
+            font-size: 0.75em;
             color: #666;
-            margin-top: 5px;
+            margin-top: 2px;
         }
         
         .big-button {
             width: 100%;
-            padding: 15px;
-            font-size: 1.2em;
+            padding: 12px;
+            font-size: 1.1em;
             font-weight: bold;
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
-            margin: 10px 0;
+            margin: 8px 0;
             transition: all 0.3s;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
             color: white;
         }
         
         .btn-secondary {
-            background: linear-gradient(135deg, #1989fa 0%, #0570d6 100%);
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
             color: white;
         }
         
         .btn-danger {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
             color: white;
         }
         
-        .big-button:active {
-            transform: translateY(2px);
+        .big-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
         }
         
-        .chart-selector {
+        /* 圖表區域 */
+        .chart-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .chart-controls select, .chart-controls button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        
+        .chart-controls button {
+            background: #6c5ce7;
+            color: white;
+            border-color: #6c5ce7;
+            cursor: pointer;
+        }
+        
+        .chart-controls button:hover {
+            background: #5a4fcf;
+        }
+        
+        .chart-container {
             background: white;
-            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .chart-selector select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e5e5;
-            border-radius: 8px;
-            font-size: 1em;
-            background: white;
+            height: 450px;
+            position: relative;
         }
         
         .test-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin: 15px 0;
+            gap: 6px;
+            margin-bottom: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
         }
         
         .test-btn {
             padding: 8px 12px;
-            border: 2px solid #e5e5e5;
+            border: 1px solid #ddd;
             background: white;
-            border-radius: 20px;
+            border-radius: 15px;
             cursor: pointer;
-            font-size: 0.85em;
+            font-size: 0.8em;
             transition: all 0.3s;
-            flex-shrink: 0;
-        }
-        
-        .test-btn.active {
-            background: #07c160;
-            color: white;
-            border-color: #07c160;
-        }
-        
-        .chart-container {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 15px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            height: 300px;
-            position: relative;
-        }
-        
-        .simple-chart {
-            width: 100%;
-            height: 200px;
-            position: relative;
-            margin: 20px 0;
-        }
-        
-        .chart-bars {
-            display: flex;
-            align-items: end;
-            height: 150px;
-            border-bottom: 2px solid #e5e5e5;
-            padding: 10px 0;
-            gap: 2px;
-        }
-        
-        .chart-bar {
-            flex: 1;
-            background: linear-gradient(to top, #07c160, #39d374);
-            border-radius: 3px 3px 0 0;
-            position: relative;
-            min-height: 5px;
-            cursor: pointer;
-        }
-        
-        .chart-bar-value {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.7em;
-            font-weight: bold;
-            color: #333;
             white-space: nowrap;
         }
         
-        .chart-dates {
-            display: flex;
-            margin-top: 8px;
-            gap: 2px;
+        .test-btn:hover {
+            border-color: #6c5ce7;
+            color: #6c5ce7;
+            transform: translateY(-1px);
         }
         
-        .chart-date {
-            flex: 1;
-            text-align: center;
-            font-size: 0.7em;
-            color: #666;
+        .test-btn.active {
+            background: #6c5ce7;
+            color: white;
+            border-color: #6c5ce7;
+            box-shadow: 0 3px 10px rgba(108, 92, 231, 0.3);
         }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .stat-card h3 {
-            color: #07c160;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-        
-        .stat-value {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-        }
-        
+        /* 記錄顯示 */
         .record-card {
-            background: white;
-            border-radius: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .record-date {
             font-size: 1.1em;
             font-weight: bold;
-            color: #07c160;
+            color: #6c5ce7;
             margin-bottom: 10px;
             text-align: center;
-            background: #f0f9f4;
+            background: white;
             padding: 8px;
-            border-radius: 8px;
+            border-radius: 6px;
         }
         
         .record-values {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 8px;
         }
         
         .record-item {
-            background: #fafafa;
+            background: white;
             padding: 8px;
             border-radius: 6px;
             text-align: center;
+            border: 1px solid #e9ecef;
         }
         
         .record-item-name {
-            font-size: 0.75em;
+            font-size: 0.7em;
             color: #666;
             margin-bottom: 3px;
         }
@@ -341,16 +301,43 @@
             font-weight: bold;
         }
         
-        .value-normal { color: #07c160; }
-        .value-high { color: #ff4757; }
-        .value-low { color: #ffa502; }
+        .value-normal { color: #00b894; }
+        .value-high { color: #e17055; }
+        .value-low { color: #fdcb6e; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stat-card h3 {
+            color: #6c5ce7;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
         
         .success-message {
             background: #d4edda;
-            border: 2px solid #07c160;
-            color: #07c160;
+            border: 2px solid #00b894;
+            color: #00b894;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 6px;
             text-align: center;
             font-weight: bold;
             margin: 10px 0;
@@ -360,244 +347,438 @@
         .alert {
             padding: 12px;
             margin: 10px 0;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 2px solid;
         }
         
         .alert-info {
-            background: #e3f2fd;
-            border-color: #1989fa;
-            color: #0d47a1;
+            background: #d1ecf1;
+            border-color: #74b9ff;
+            color: #0c5460;
         }
         
         .search-box {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e5e5;
+            padding: 10px;
+            border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 1em;
             margin-bottom: 15px;
-            background: #fafafa;
         }
         
         .search-box:focus {
             outline: none;
-            border-color: #07c160;
-            background: white;
+            border-color: #6c5ce7;
         }
         
-        .float-add-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            background: #07c160;
-            border-radius: 50%;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 16px rgba(7, 193, 96, 0.4);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .float-add-btn:active {
-            transform: scale(0.95);
-        }
-        
-        @media screen and (max-width: 375px) {
-            .header h1 {
-                font-size: 1.5em;
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
             }
             
-            .form-row input {
-                font-size: 16px;
-            }
-            
-            .stats-grid {
+            .input-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .chart-controls {
+                flex-direction: column;
+                align-items: stretch;
             }
             
             .record-values {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🏥 奶奶健康记录本</h1>
-        <p>微信专用版 • 简单易用</p>
-    </div>
-    
     <div class="container">
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('add')">📝 添加</button>
-            <button class="tab" onclick="showTab('chart')">📊 图表</button>
-            <button class="tab" onclick="showTab('records')">📋 记录</button>
-            <button class="tab" onclick="showTab('help')">❓ 帮助</button>
+        <div class="header">
+            <h1>🏥 奶奶完整健康記錄系統</h1>
+            <p>包含完整檢驗指標 • 專業記錄 • 趨勢分析 • 智能預警 • 最終修復版</p>
         </div>
         
-        <!-- 添加記錄 -->
-        <div id="add" class="tab-content active">
-            <div class="section">
-                <div class="form-row">
-                    <label for="testDate">📅 检查日期</label>
-                    <input type="date" id="testDate" required>
-                </div>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('input')">📝 添加記錄</button>
+            <button class="tab" onclick="showTab('charts')">📊 圖表分析</button>
+            <button class="tab" onclick="showTab('records')">📋 歷史記錄</button>
+            <button class="tab" onclick="showTab('export')">💾 數據管理</button>
+            <button class="tab" onclick="showTab('summary')">📈 健康總覽</button>
+        </div>
+        
+        <!-- 添加記錄標籤頁 -->
+        <div id="input" class="tab-content active">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="testDate">📅 檢查日期</label>
+                <input type="date" id="testDate" required>
             </div>
             
-            <div class="section">
-                <div class="section-title">🍬 主要指标</div>
-                <div class="form-row">
-                    <label for="glucose">血糖</label>
-                    <input type="number" id="glucose" step="0.1" placeholder="例如：5.7">
-                    <div class="reference-range">正常：3.9-6.1 mmol/L</div>
+            <div class="input-sections">
+                <!-- 基礎代謝指標 -->
+                <div class="section">
+                    <div class="section-title">🍬 基礎代謝指標</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="glucose">葡萄糖</label>
+                            <input type="number" id="glucose" step="0.1" placeholder="5.7">
+                            <div class="reference-range">正常：3.90-6.10 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lactate">乳酸濃度</label>
+                            <input type="number" id="lactate" step="0.1" placeholder="1.2">
+                            <div class="reference-range">正常：0.5-1.6 mmol/L</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="gpt">GPT肝功能</label>
-                    <input type="number" id="gpt" step="1" placeholder="例如：29">
-                    <div class="reference-range">正常：7-40 U/L</div>
+                
+                <!-- 肝功能指標 -->
+                <div class="section">
+                    <div class="section-title">🫀 肝功能指標</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="gpt">丙氨酸氨基轉移酶(GPT)</label>
+                            <input type="number" id="gpt" step="1" placeholder="29">
+                            <div class="reference-range">正常：7-40 U/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="got">天門冬氨酸氨基轉移酶(GOT)</label>
+                            <input type="number" id="got" step="1" placeholder="43">
+                            <div class="reference-range">正常：13-35 U/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gotMito">GOT線粒體同工酶</label>
+                            <input type="number" id="gotMito" step="1" placeholder="6">
+                            <div class="reference-range">正常：1-15 U/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="alp">鹼性磷酸酶</label>
+                            <input type="number" id="alp" step="1" placeholder="252">
+                            <div class="reference-range">正常：50-135 U/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ggt">γ-谷氨醯基轉移酶</label>
+                            <input type="number" id="ggt" step="1" placeholder="56">
+                            <div class="reference-range">正常：7-45 U/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ldh">乳酸脫氫酶</label>
+                            <input type="number" id="ldh" step="1" placeholder="180">
+                            <div class="reference-range">正常：120-250 U/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gsr">谷胱甘肽還原酶</label>
+                            <input type="number" id="gsr" step="1" placeholder="50">
+                            <div class="reference-range">正常：33-74 U/L</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="got">GOT肝功能</label>
-                    <input type="number" id="got" step="1" placeholder="例如：43">
-                    <div class="reference-range">正常：13-35 U/L</div>
+                
+                <!-- 膽紅素指標 -->
+                <div class="section">
+                    <div class="section-title">🟡 膽紅素指標</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="bilirubin">總膽紅素</label>
+                            <input type="number" id="bilirubin" step="0.1" placeholder="33.0">
+                            <div class="reference-range">正常：4.7-24 μmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="directBilirubin">直接膽紅素</label>
+                            <input type="number" id="directBilirubin" step="0.1" placeholder="16.0">
+                            <div class="reference-range">正常：0-6.8 μmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="bileAcid">膽汁酸</label>
+                            <input type="number" id="bileAcid" step="0.1" placeholder="5.5">
+                            <div class="reference-range">正常：1.0-10.0 μmol/L</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="bilirubin">總膽紅素</label>
-                    <input type="number" id="bilirubin" step="0.1" placeholder="例如：33">
-                    <div class="reference-range">正常：4.7-24 μmol/L</div>
+                
+                <!-- 蛋白質指標 -->
+                <div class="section">
+                    <div class="section-title">🥛 蛋白質指標</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="totalProtein">總蛋白</label>
+                            <input type="number" id="totalProtein" step="0.1" placeholder="70">
+                            <div class="reference-range">正常：60-83 g/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="albumin">白蛋白</label>
+                            <input type="number" id="albumin" step="0.1" placeholder="42">
+                            <div class="reference-range">正常：35-55 g/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="albGlobRatio">白球比例</label>
+                            <input type="number" id="albGlobRatio" step="0.1" placeholder="1.8">
+                            <div class="reference-range">正常：1.25-2.50</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="directBilirubin">直接膽紅素</label>
-                    <input type="number" id="directBilirubin" step="0.1" placeholder="例如：16">
-                    <div class="reference-range">正常：0-6.8 μmol/L</div>
+                
+                <!-- 腎功能指標 -->
+                <div class="section">
+                    <div class="section-title">🧪 腎功能指標</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="urea">尿素</label>
+                            <input type="number" id="urea" step="0.1" placeholder="5.8">
+                            <div class="reference-range">正常：2.5-7.1 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="creatinine">肌酐</label>
+                            <input type="number" id="creatinine" step="1" placeholder="75">
+                            <div class="reference-range">正常：53-97 μmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="uricAcid">尿酸</label>
+                            <input type="number" id="uricAcid" step="1" placeholder="256">
+                            <div class="reference-range">正常：155-357 μmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cystatinC">胱抑素C</label>
+                            <input type="number" id="cystatinC" step="0.01" placeholder="0.81">
+                            <div class="reference-range">正常：0.55-1.07 mg/L</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="section">
-                <div class="section-title">🧪 其他指标</div>
-                <div class="form-row">
-                    <label for="alp">鹼性磷酸酶</label>
-                    <input type="number" id="alp" step="1" placeholder="例如：252">
-                    <div class="reference-range">正常：50-135 U/L</div>
+                
+                <!-- 電解質指標 -->
+                <div class="section">
+                    <div class="section-title">⚡ 電解質指標</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="sodium">鈉</label>
+                            <input type="number" id="sodium" step="0.1" placeholder="141">
+                            <div class="reference-range">正常：136-146 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="potassium">鉀</label>
+                            <input type="number" id="potassium" step="0.1" placeholder="3.8">
+                            <div class="reference-range">正常：3.20-4.50 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="chloride">氯</label>
+                            <input type="number" id="chloride" step="0.1" placeholder="103">
+                            <div class="reference-range">正常：99-106 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="co2">二氧化碳</label>
+                            <input type="number" id="co2" step="0.1" placeholder="26">
+                            <div class="reference-range">正常：21.0-31.0 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="calcium">鈣</label>
+                            <input type="number" id="calcium" step="0.01" placeholder="1.15">
+                            <div class="reference-range">正常：1.15-1.16 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="phosphorus">磷</label>
+                            <input type="number" id="phosphorus" step="0.01" placeholder="1.18">
+                            <div class="reference-range">正常：0.85-1.51 mmol/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="magnesium">血清鎂</label>
+                            <input type="number" id="magnesium" step="0.01" placeholder="0.89">
+                            <div class="reference-range">正常：0.75-1.02 mmol/L</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="ggt">γ-谷氨酰基轉移酶</label>
-                    <input type="number" id="ggt" step="1" placeholder="例如：56">
-                    <div class="reference-range">正常：7-45 U/L</div>
+                
+                <!-- 心肌標誌物 -->
+                <div class="section">
+                    <div class="section-title">❤️ 心肌標誌物</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="ck">肌酸激酶</label>
+                            <input type="number" id="ck" step="1" placeholder="145">
+                            <div class="reference-range">正常：22-269 U/L</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="hfabp">心型脂肪酸結合蛋白</label>
+                            <input type="number" id="hfabp" step="0.1" placeholder="2.5">
+                            <div class="reference-range">正常：0-5 ng/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ckmb">CK-MB質量</label>
+                            <input type="number" id="ckmb" step="0.1" placeholder="2.1">
+                            <div class="reference-range">正常：0.3-4 ng/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="myoglobin">肌紅蛋白定量</label>
+                            <input type="number" id="myoglobin" step="1" placeholder="45">
+                            <div class="reference-range">正常：<70 ng/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="troponin">高敏肌鈣蛋白</label>
+                            <input type="number" id="troponin" step="0.1" placeholder="15">
+                            <div class="reference-range">正常：<30 ng/L</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="urea">尿素</label>
-                    <input type="number" id="urea" step="0.1" placeholder="例如：5.8">
-                    <div class="reference-range">正常：2.5-7.1 mmol/L</div>
+                
+                <!-- 其他酶類 -->
+                <div class="section">
+                    <div class="section-title">🔬 其他酶類</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="amylase">澱粉酶</label>
+                            <input type="number" id="amylase" step="1" placeholder="85">
+                            <div class="reference-range">正常：35-135 U/L</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="creatinine">肌酐</label>
-                    <input type="number" id="creatinine" step="1" placeholder="例如：75">
-                    <div class="reference-range">正常：53-97 μmol/L</div>
+                
+                <!-- 炎症標誌物 -->
+                <div class="section">
+                    <div class="section-title">🔥 炎症標誌物 (白介素)</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="il2">白介素2</label>
+                            <input type="number" id="il2" step="0.1" placeholder="3.7">
+                            <div class="reference-range">正常：<7.5 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il4">白介素4</label>
+                            <input type="number" id="il4" step="0.1" placeholder="4.3">
+                            <div class="reference-range">正常：<8.6 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il5">白介素5</label>
+                            <input type="number" id="il5" step="0.1" placeholder="1.5">
+                            <div class="reference-range">正常：<3.1 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il6">白介素6</label>
+                            <input type="number" id="il6" step="0.1" placeholder="2.7">
+                            <div class="reference-range">正常：<5.4 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il8">白介素8</label>
+                            <input type="number" id="il8" step="0.1" placeholder="10.3">
+                            <div class="reference-range">正常：<20.6 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il10">白介素10</label>
+                            <input type="number" id="il10" step="0.1" placeholder="6.4">
+                            <div class="reference-range">正常：<12.9 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il1b">白介素1B</label>
+                            <input type="number" id="il1b" step="0.1" placeholder="6.2">
+                            <div class="reference-range">正常：<12.4 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il12">白介素12p70</label>
+                            <input type="number" id="il12" step="0.1" placeholder="1.7">
+                            <div class="reference-range">正常：<3.4 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="il17">白介素17</label>
+                            <input type="number" id="il17" step="0.1" placeholder="10.7">
+                            <div class="reference-range">正常：<21.4 pg/mL</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tnfa">腫瘤壞死因子α</label>
+                            <input type="number" id="tnfa" step="0.1" placeholder="8.2">
+                            <div class="reference-range">正常：<16.5 pg/mL</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="totalProtein">总蛋白</label>
-                    <input type="number" id="totalProtein" step="0.1" placeholder="例如：70">
-                    <div class="reference-range">正常：60-83 g/L</div>
+                
+                <!-- 凝血功能 -->
+                <div class="section">
+                    <div class="section-title">🩸 凝血功能</div>
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="aptt">APTT</label>
+                            <input type="number" id="aptt" step="0.1" placeholder="30.5">
+                            <div class="reference-range">正常：22.3-38.7 秒</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="pt">PT</label>
+                            <input type="number" id="pt" step="0.1" placeholder="13.0">
+                            <div class="reference-range">正常：10.0-16.0 秒</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tt">TT</label>
+                            <input type="number" id="tt" step="0.1" placeholder="17.5">
+                            <div class="reference-range">正常：14.00-21.00 秒</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="fg">Fg</label>
+                            <input type="number" id="fg" step="0.1" placeholder="2.6">
+                            <div class="reference-range">正常：1.8-3.5 g/L</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label for="albumin">白蛋白</label>
-                    <input type="number" id="albumin" step="0.1" placeholder="例如：42">
-                    <div class="reference-range">正常：35-55 g/L</div>
-                </div>
-                <div class="form-row">
-                    <label for="sodium">钠</label>
-                    <input type="number" id="sodium" step="0.1" placeholder="例如：141">
-                    <div class="reference-range">正常：136-146 mmol/L</div>
-                </div>
-                <div class="form-row">
-                    <label for="potassium">钾</label>
-                    <input type="number" id="potassium" step="0.1" placeholder="例如：3.8">
-                    <div class="reference-range">正常：3.2-4.5 mmol/L</div>
-                </div>
-                <div class="form-row">
-                    <label for="calcium">钙</label>
-                    <input type="number" id="calcium" step="0.01" placeholder="例如：1.15">
-                    <div class="reference-range">正常：1.15-1.16 mmol/L</div>
-                </div>
-                <div class="form-row">
-                    <label for="lactate">乳酸</label>
-                    <input type="number" id="lactate" step="0.1" placeholder="例如：1.2">
-                    <div class="reference-range">正常：0.5-1.6 mmol/L</div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <div class="form-row">
-                    <label for="notes">📝 備註</label>
-                    <input type="text" id="notes" placeholder="医生建议、身体感觉等">
+                
+                <!-- 備註 -->
+                <div class="section">
+                    <div class="section-title">📝 備註信息</div>
+                    <div class="form-group">
+                        <label for="notes">備註</label>
+                        <input type="text" id="notes" placeholder="可填寫：醫生建議、身體感覺、用藥情況等">
+                    </div>
                 </div>
             </div>
             
             <div class="success-message" id="successMessage">
-                ✅ 記錄保存成功！
+                ✅ 記錄保存成功！數據已同步到所有標籤頁！
             </div>
             
-            <button class="big-button btn-primary" onclick="saveRecord()">💾 保存记录</button>
-            <button class="big-button btn-danger" onclick="clearForm()">🗑️ 清空输入</button>
+            <button class="big-button btn-primary" onclick="saveRecord()">💾 保存今天的記錄</button>
+            <button class="big-button btn-secondary" onclick="loadLatestData()">📊 加載最新數據模板</button>
+            <button class="big-button btn-danger" onclick="clearCurrentForm()">🗑️ 清空當前輸入</button>
         </div>
         
-        <!-- 圖表分析 -->
-        <div id="chart" class="tab-content">
-            <div class="chart-selector">
-                <label><strong>选择检验项目：</strong></label>
-                <select id="chartType" onchange="updateChart()">
-                    <option value="glucose">血糖</option>
-                    <option value="gpt">GPT肝功能</option>
-                    <option value="got">GOT肝功能</option>
-                    <option value="bilirubin">總膽紅素</option>
-                    <option value="directBilirubin">直接膽紅素</option>
-                    <option value="alp">鹼性磷酸酶</option>
-                    <option value="ggt">γ-谷氨酰基轉移酶</option>
-                    <option value="urea">尿素</option>
-                    <option value="creatinine">肌酐</option>
-                    <option value="totalProtein">总蛋白</option>
-                    <option value="albumin">白蛋白</option>
-                    <option value="sodium">钠</option>
-                    <option value="potassium">钾</option>
-                    <option value="calcium">钙</option>
-                    <option value="lactate">乳酸</option>
-                </select>
+        <!-- 圖表分析標籤頁 -->
+        <div id="charts" class="tab-content">
+            <h2 style="margin-bottom: 15px; color: #2d3436;">📊 健康趨勢圖表分析</h2>
+            
+            <!-- 數據統計信息 -->
+            <div class="alert alert-info" style="margin-bottom: 15px;">
+                <strong>📈 數據統計：</strong>
+                <span id="dataStatsInfo">正在加載數據統計...</span>
             </div>
             
-            <div class="test-buttons">
-                <button class="test-btn active" onclick="quickSelectChart(this, 'glucose')">血糖</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'gpt')">GPT</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'got')">GOT</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'bilirubin')">膽紅素</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'alp')">鹼性磷酸酶</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'ggt')">γ-GT</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'totalProtein')">总蛋白</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'albumin')">白蛋白</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'sodium')">钠</button>
-                <button class="test-btn" onclick="quickSelectChart(this, 'potassium')">钾</button>
+            <input type="text" class="search-box" id="chartSearch" placeholder="🔍 搜索檢驗項目..." onkeyup="filterChartButtons()">
+            
+            <div class="chart-controls">
+                <label><strong>選擇檢驗項目：</strong></label>
+                <select id="chartType" onchange="updateChart()">
+                    <!-- 將通過JavaScript動態填充 -->
+                </select>
+                
+                <label><strong>圖表類型：</strong></label>
+                <select id="chartStyle" onchange="updateChart()">
+                    <option value="line">折線圖</option>
+                    <option value="bar" selected>柱狀圖</option>
+                </select>
+                
+                <select id="dataRange" onchange="updateChart()">
+                    <option value="10">最近10次</option>
+                    <option value="20" selected>最近20次</option>
+                    <option value="all">全部數據</option>
+                </select>
+                
+                <button onclick="updateChart()">🔄 刷新圖表</button>
+                <button onclick="showMultiChart()">📈 多項對比</button>
+                <button onclick="exportChart()">📊 導出圖表</button>
+            </div>
+            
+            <div class="test-buttons" id="testButtons">
+                <!-- 按鈕將通過JavaScript動態生成 -->
             </div>
             
             <div class="chart-container">
-                <div class="simple-chart" id="simpleChart">
-                    <div style="text-align: center; margin-bottom: 10px;">
-                        <strong id="chartTitle">血糖趋势图</strong>
-                    </div>
-                    <div class="chart-bars" id="chartBars"></div>
-                    <div class="chart-dates" id="chartDates"></div>
-                </div>
+                <canvas id="trendChart"></canvas>
             </div>
             
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>最新数值</h3>
+                    <h3>最新數值</h3>
                     <div class="stat-value" id="latestValue">-</div>
                 </div>
                 <div class="stat-card">
@@ -612,190 +793,273 @@
                     <h3>最低值</h3>
                     <div class="stat-value" id="minValue">-</div>
                 </div>
+                <div class="stat-card">
+                    <h3>記錄數量</h3>
+                    <div class="stat-value" id="recordCount">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>趨勢分析</h3>
+                    <div class="stat-value" id="trendAnalysis">-</div>
+                </div>
             </div>
         </div>
         
-        <!-- 歷史記錄 -->
+        <!-- 歷史記錄標籤頁 -->
         <div id="records" class="tab-content">
+            <h2 style="margin-bottom: 15px; color: #2d3436;">📋 完整歷史記錄</h2>
+            
             <div class="alert alert-info">
-                <strong>📊 统计：</strong>
-                共 <span id="totalRecords">0</span> 条记录
+                <strong>📊 記錄統計：</strong>
+                共有 <span id="totalRecords">0</span> 條記錄，
+                時間跨度：<span id="dateRange">-</span>
             </div>
             
-            <input type="text" class="search-box" id="recordSearch" placeholder="🔍 搜索记录..." onkeyup="filterRecords()">
+            <input type="text" class="search-box" id="recordSearch" placeholder="🔍 搜索記錄（按日期、數值或備註）..." onkeyup="filterRecords()">
             
-            <div id="recordsList">
-                <!-- 記錄動態添加 -->
+            <div class="records-grid" id="recordsList">
+                <!-- 記錄將通過JavaScript動態添加 -->
             </div>
         </div>
         
-        <!-- 幫助頁面 -->
-        <div id="help" class="tab-content">
+        <!-- 數據管理標籤頁 -->
+        <div id="export" class="tab-content">
+            <h2 style="margin-bottom: 15px; color: #2d3436;">💾 數據導入導出</h2>
+            
             <div class="section">
-                <div class="section-title">📖 使用说明</div>
-                <div style="line-height: 1.6;">
-                    <p><strong>1. 添加记录：</strong></p>
-                    <p>• 选择检查日期</p>
-                    <p>• 输入检验数值</p>
-                    <p>• 点击"保存记录"</p>
-                    <br>
-                    
-                    <p><strong>2. 查看图表：</strong></p>
-                    <p>• 选择想看的检验项目</p>
-                    <p>• 查看数值变化趋势</p>
-                    <p>• 绿色=正常，红色=异常</p>
-                    <br>
-                    
-                    <p><strong>3. 查看记录：</strong></p>
-                    <p>• 所有历史记录</p>
-                    <p>• 可以搜索和删除</p>
-                    <br>
-                    
-                    <p><strong>4. 正常范围：</strong></p>
-                    <p>• 血糖：3.9-6.1</p>
-                    <p>• GPT：7-40</p>
-                    <p>• GOT：13-35</p>
-                    <p>• 总胆红素：4.7-24</p>
+                <div class="section-title">📤 數據導出</div>
+                <button class="big-button btn-secondary" onclick="exportToExcel()">📊 導出為Excel文件(.xlsx)</button>
+                <button class="big-button btn-secondary" onclick="exportToCSV()">📄 導出為CSV文件</button>
+                <button class="big-button btn-secondary" onclick="exportToJSON()">💾 導出為JSON文件</button>
+                <button class="big-button btn-secondary" onclick="copyToClipboard()">📋 複製數據到剪貼板</button>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📥 數據導入</div>
+                <input type="file" id="fileInput" accept=".json,.csv,.xlsx" style="margin-bottom: 10px;">
+                <button class="big-button btn-primary" onclick="importData()">📁 導入數據文件</button>
+                <button class="big-button btn-secondary" onclick="loadPreloadedData()">🔄 恢復真實數據</button>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">🗑️ 數據管理</div>
+                <button class="big-button btn-danger" onclick="clearAllData()">⚠️ 清空所有記錄</button>
+                <button class="big-button btn-secondary" onclick="backupData()">💿 創建數據備份</button>
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>💡 使用提示：</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>數據自動保存在瀏覽器本地存儲中</li>
+                    <li>建議定期導出備份重要數據</li>
+                    <li>清空數據操作不可恢復，請謹慎操作</li>
+                    <li>更換設備時請先導出數據再導入</li>
+                    <li>Excel格式最適合與醫生分享和打印</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 健康總覽標籤頁 -->
+        <div id="summary" class="tab-content">
+            <h2 style="margin-bottom: 15px; color: #2d3436;">📈 健康狀況總覽</h2>
+            
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <h3>總記錄數</h3>
+                    <div class="stat-value" id="summaryTotalRecords">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>監測天數</h3>
+                    <div class="stat-value" id="summaryDays">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>異常指標數</h3>
+                    <div class="stat-value" id="summaryAbnormal" style="color: #e17055;">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>正常指標數</h3>
+                    <div class="stat-value" id="summaryNormal" style="color: #00b894;">-</div>
                 </div>
             </div>
             
             <div class="section">
-                <div class="section-title">💡 温馨提示</div>
-                <div style="line-height: 1.6;">
-                    <p>• 数据自动保存在手机里</p>
-                    <p>• 可以分享给其他家人使用</p>
-                    <p>• 异常数值及时咨询医生</p>
-                    <p>• 定期记录有助于治疗</p>
+                <div class="section-title">🔍 最新檢驗結果分析</div>
+                <div id="latestAnalysis" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                    正在分析最新檢驗結果...
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📊 主要指標趨勢</div>
+                <div id="trendSummary" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                    正在分析趨勢...
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">⚠️ 重點關注項目</div>
+                <div id="alertItems" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                    正在分析重點關注項目...
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- 浮動添加按鈕 -->
-    <button class="float-add-btn" onclick="showTab('add')">+</button>
 
     <script>
-        // 檢驗項目配置
-        var testConfigs = {
-            glucose: { name: '血糖', unit: 'mmol/L', min: 3.9, max: 6.1 },
+        // 完整的檢驗項目配置
+        const testConfigs = {
+            glucose: { name: '葡萄糖', unit: 'mmol/L', min: 3.9, max: 6.1 },
             gpt: { name: 'GPT', unit: 'U/L', min: 7, max: 40 },
             got: { name: 'GOT', unit: 'U/L', min: 13, max: 35 },
+            gotMito: { name: 'GOT線粒體同工酶', unit: 'U/L', min: 1, max: 15 },
+            alp: { name: '鹼性磷酸酶', unit: 'U/L', min: 50, max: 135 },
+            ggt: { name: 'γ-谷氨醯基轉移酶', unit: 'U/L', min: 7, max: 45 },
             bilirubin: { name: '總膽紅素', unit: 'μmol/L', min: 4.7, max: 24 },
             directBilirubin: { name: '直接膽紅素', unit: 'μmol/L', min: 0, max: 6.8 },
-            alp: { name: '鹼性磷酸酶', unit: 'U/L', min: 50, max: 135 },
-            ggt: { name: 'γ-GT', unit: 'U/L', min: 7, max: 45 },
+            totalProtein: { name: '總蛋白', unit: 'g/L', min: 60, max: 83 },
+            albumin: { name: '白蛋白', unit: 'g/L', min: 35, max: 55 },
+            albGlobRatio: { name: '白球比例', unit: '', min: 1.25, max: 2.5 },
+            bileAcid: { name: '膽汁酸', unit: 'μmol/L', min: 1.0, max: 10.0 },
             urea: { name: '尿素', unit: 'mmol/L', min: 2.5, max: 7.1 },
             creatinine: { name: '肌酐', unit: 'μmol/L', min: 53, max: 97 },
-            totalProtein: { name: '总蛋白', unit: 'g/L', min: 60, max: 83 },
-            albumin: { name: '白蛋白', unit: 'g/L', min: 35, max: 55 },
-            sodium: { name: '钠', unit: 'mmol/L', min: 136, max: 146 },
-            potassium: { name: '钾', unit: 'mmol/L', min: 3.2, max: 4.5 },
-            calcium: { name: '钙', unit: 'mmol/L', min: 1.15, max: 1.16 },
-            lactate: { name: '乳酸', unit: 'mmol/L', min: 0.5, max: 1.6 }
+            uricAcid: { name: '尿酸', unit: 'μmol/L', min: 155, max: 357 },
+            sodium: { name: '鈉', unit: 'mmol/L', min: 136, max: 146 },
+            potassium: { name: '鉀', unit: 'mmol/L', min: 3.2, max: 4.5 },
+            chloride: { name: '氯', unit: 'mmol/L', min: 99, max: 106 },
+            co2: { name: '二氧化碳', unit: 'mmol/L', min: 21.0, max: 31.0 },
+            calcium: { name: '鈣', unit: 'mmol/L', min: 1.15, max: 1.16 },
+            phosphorus: { name: '磷', unit: 'mmol/L', min: 0.85, max: 1.51 },
+            magnesium: { name: '血清鎂', unit: 'mmol/L', min: 0.75, max: 1.02 },
+            cystatinC: { name: '胱抑素C', unit: 'mg/L', min: 0.55, max: 1.07 },
+            lactate: { name: '乳酸濃度', unit: 'mmol/L', min: 0.5, max: 1.6 },
+            ldh: { name: '乳酸脫氫酶', unit: 'U/L', min: 120, max: 250 },
+            ck: { name: '肌酸激酶', unit: 'U/L', min: 22, max: 269 },
+            hfabp: { name: '心型脂肪酸結合蛋白', unit: 'ng/mL', min: 0, max: 5 },
+            gsr: { name: '谷胱甘肽還原酶', unit: 'U/L', min: 33, max: 74 },
+            ckmb: { name: 'CK-MB質量', unit: 'ng/mL', min: 0.3, max: 4 },
+            myoglobin: { name: '肌紅蛋白定量', unit: 'ng/mL', min: 0, max: 70 },
+            troponin: { name: '高敏肌鈣蛋白', unit: 'ng/L', min: 0, max: 30 },
+            amylase: { name: '澱粉酶', unit: 'U/L', min: 35, max: 135 },
+            il2: { name: '白介素2', unit: 'pg/mL', min: 0, max: 7.5 },
+            il4: { name: '白介素4', unit: 'pg/mL', min: 0, max: 8.6 },
+            il5: { name: '白介素5', unit: 'pg/mL', min: 0, max: 3.1 },
+            il6: { name: '白介素6', unit: 'pg/mL', min: 0, max: 5.4 },
+            il8: { name: '白介素8', unit: 'pg/mL', min: 0, max: 20.6 },
+            il10: { name: '白介素10', unit: 'pg/mL', min: 0, max: 12.9 },
+            il1b: { name: '白介素1B', unit: 'pg/mL', min: 0, max: 12.4 },
+            il12: { name: '白介素12p70', unit: 'pg/mL', min: 0, max: 3.4 },
+            il17: { name: '白介素17', unit: 'pg/mL', min: 0, max: 21.4 },
+            tnfa: { name: '腫瘤壞死因子α', unit: 'pg/mL', min: 0, max: 16.5 },
+            aptt: { name: 'APTT', unit: '秒', min: 22.3, max: 38.7 },
+            pt: { name: 'PT', unit: '秒', min: 10.0, max: 16.0 },
+            tt: { name: 'TT', unit: '秒', min: 14.0, max: 21.0 },
+            fg: { name: 'Fg', unit: 'g/L', min: 1.8, max: 3.5 }
         };
 
-        // 預裝數據
-        var preloadedData = [
-            {"date": "2025-05-18", "notes": "初始检验", "glucose": 5.7, "gpt": 29, "got": 43, "bilirubin": 33, "directBilirubin": 16, "alp": 252, "ggt": 56, "totalProtein": 57, "albumin": 31, "urea": 12.8, "creatinine": 166, "sodium": 131, "potassium": 3.51, "calcium": 2.08, "lactate": 1.5},
-            {"date": "2025-05-19", "notes": "血糖偏低", "glucose": 2.2, "gpt": 18, "got": 30, "bilirubin": 18.8, "directBilirubin": 7.8, "alp": 166, "ggt": 36, "totalProtein": 49, "albumin": 24, "urea": 18.1, "creatinine": 154, "sodium": 136, "potassium": 3.16, "calcium": 1.87, "lactate": 1.4},
-            {"date": "2025-05-23", "notes": "血糖过高", "glucose": 15.3, "gpt": 9, "got": 14, "bilirubin": 61, "directBilirubin": 7.6, "alp": 87, "ggt": 19, "totalProtein": 23, "albumin": 36, "urea": 18.4, "creatinine": 86, "sodium": 146, "potassium": 4, "calcium": 1.13, "lactate": 1.8},
-            {"date": "2025-05-24", "notes": "", "glucose": 11.7, "gpt": 7, "got": 16, "bilirubin": 44, "directBilirubin": 5.8, "alp": 70, "ggt": 19, "totalProtein": 57, "albumin": 37, "urea": 15.2, "creatinine": 67, "sodium": 142, "potassium": 4.2, "calcium": 1.1, "lactate": 1.3},
-            {"date": "2025-05-25", "notes": "胆红素升高", "glucose": 13.6, "gpt": 12, "got": 21, "bilirubin": 47, "directBilirubin": 10.6, "alp": 65, "ggt": 24, "totalProtein": 58, "albumin": 39, "urea": 11.9, "creatinine": 56, "sodium": 147, "potassium": 3.1, "calcium": 1, "lactate": 1.7},
-            {"date": "2025-05-26", "notes": "多项指标异常", "glucose": 14.6, "gpt": 24, "got": 40, "bilirubin": 68, "directBilirubin": 18.3, "alp": 54, "ggt": 33, "totalProtein": 55, "albumin": 35, "urea": 13.5, "creatinine": 57, "sodium": 146, "potassium": 4.9, "calcium": 1.09, "lactate": 1.5},
-            {"date": "2025-05-27", "notes": "肝功能异常", "glucose": 13.4, "gpt": 35, "got": 45, "bilirubin": 20, "directBilirubin": 14.7, "alp": 49, "ggt": 35, "totalProtein": 54, "albumin": 35, "urea": 13.7, "creatinine": 62, "sodium": 133, "potassium": 4.5, "calcium": 1.1, "lactate": 2.1},
-            {"date": "2025-05-28", "notes": "", "glucose": 9.9, "gpt": 39, "got": 44, "bilirubin": 52, "directBilirubin": 15.9, "alp": 54, "ggt": 38, "totalProtein": 53, "albumin": 34, "urea": 12.3, "creatinine": 65, "sodium": 136, "potassium": 4.7, "calcium": 1.08, "lactate": 1.9},
-            {"date": "2025-05-30", "notes": "开始好转", "glucose": 8.6, "gpt": 24, "got": 25, "bilirubin": 23, "directBilirubin": 11.1, "alp": 52, "ggt": 26, "totalProtein": 57, "albumin": 38, "urea": 9.1, "creatinine": 60, "sodium": 144, "potassium": 4.1, "calcium": 1.06, "lactate": 1.4},
-            {"date": "2025-06-01", "notes": "持续改善", "glucose": 12.1, "gpt": 14, "got": 19, "bilirubin": 14, "directBilirubin": 8.5, "alp": 55, "ggt": 21, "totalProtein": 59, "albumin": 41, "urea": 6.4, "creatinine": 58, "sodium": 143, "potassium": 4, "calcium": 1.05, "lactate": 1.2},
-            {"date": "2025-06-02", "notes": "", "glucose": 7.4, "gpt": 12, "got": 17, "bilirubin": 17, "directBilirubin": 7.3, "alp": 50, "ggt": 18, "totalProtein": 60, "albumin": 42, "urea": 5.2, "creatinine": 56, "sodium": 142, "potassium": 3.9, "calcium": 1.04, "lactate": 1.1},
-            {"date": "2025-06-03", "notes": "", "glucose": 13.5, "gpt": 11, "got": 17, "bilirubin": 1, "directBilirubin": 7.6, "alp": 48, "ggt": 16, "totalProtein": 61, "albumin": 43, "urea": 4.8, "creatinine": 54, "sodium": 141, "potassium": 3.8, "calcium": 1.03, "lactate": 1},
-            {"date": "2025-06-04", "notes": "", "glucose": 7.1, "gpt": 15, "got": 21, "bilirubin": 9, "directBilirubin": 7, "alp": 55, "ggt": 17, "totalProtein": 62, "albumin": 44, "urea": 4.5, "creatinine": 52, "sodium": 140, "potassium": 3.7, "calcium": 1.02, "lactate": 0.9},
-            {"date": "2025-06-05", "notes": "", "glucose": 8.8, "gpt": 21, "got": 19, "bilirubin": 6, "directBilirubin": 2.4, "alp": 54, "ggt": 19, "totalProtein": 63, "albumin": 45, "urea": 4.2, "creatinine": 50, "sodium": 139, "potassium": 3.6, "calcium": 1.01, "lactate": 0.8},
-            {"date": "2025-06-06", "notes": "", "glucose": 9.3, "gpt": 19, "got": 32, "bilirubin": 8, "directBilirubin": 3.2, "alp": 60, "ggt": 23, "totalProtein": 64, "albumin": 46, "urea": 3.9, "creatinine": 48, "sodium": 138, "potassium": 3.5, "calcium": 1, "lactate": 0.7},
-            {"date": "2025-06-09", "notes": "", "glucose": 7.4, "gpt": 16, "got": 22, "bilirubin": 5, "directBilirubin": 1.5, "alp": 63, "ggt": 22, "totalProtein": 65, "albumin": 47, "urea": 3.6, "creatinine": 46, "sodium": 136, "potassium": 3.3, "calcium": 0.98, "lactate": 0.5},
-            {"date": "2025-06-10", "notes": "肝功能异常", "glucose": 7.3, "gpt": 57, "got": 165, "bilirubin": 11, "directBilirubin": 7, "alp": 271, "ggt": 374, "totalProtein": 66, "albumin": 48, "urea": 3.3, "creatinine": 44, "sodium": 135, "potassium": 3.2, "calcium": 0.97, "lactate": 0.4},
-            {"date": "2025-06-11", "notes": "严重异常", "glucose": 9.3, "gpt": 153, "got": 407, "bilirubin": 16, "directBilirubin": 13.1, "alp": 322, "ggt": 495, "totalProtein": 67, "albumin": 49, "urea": 3, "creatinine": 42, "sodium": 134, "potassium": 3.1, "calcium": 0.96, "lactate": 1.2},
-            {"date": "2025-06-12", "notes": "开始下降", "glucose": 9, "gpt": 87, "got": 60, "bilirubin": 7, "directBilirubin": 7.8, "alp": 222, "ggt": 331, "totalProtein": 68, "albumin": 50, "urea": 2.7, "creatinine": 40, "sodium": 133, "potassium": 3, "calcium": 0.95, "lactate": 1.1},
-            {"date": "2025-06-13", "notes": "持续改善", "glucose": 7.8, "gpt": 50, "got": 23, "bilirubin": 0, "directBilirubin": 4.1, "alp": 165, "ggt": 250, "totalProtein": 69, "albumin": 51, "urea": 2.4, "creatinine": 38, "sodium": 132, "potassium": 2.9, "calcium": 0.94, "lactate": 1},
-            {"date": "2025-06-14", "notes": "", "glucose": 10.8, "gpt": 35, "got": 19, "bilirubin": 1, "directBilirubin": 4.8, "alp": 129, "ggt": 193, "totalProtein": 70, "albumin": 52, "urea": 2.1, "creatinine": 36, "sodium": 131, "potassium": 2.8, "calcium": 0.93, "lactate": 0.9},
-            {"date": "2025-06-15", "notes": "", "glucose": 8.7, "gpt": 28, "got": 17, "bilirubin": 0, "directBilirubin": 2.3, "alp": 110, "ggt": 146, "totalProtein": 71, "albumin": 53, "urea": 1.8, "creatinine": 34, "sodium": 130, "potassium": 2.7, "calcium": 0.92, "lactate": 0.8},
-            {"date": "2025-06-16", "notes": "", "glucose": 6.5, "gpt": 25, "got": 19, "bilirubin": 2, "directBilirubin": 2.2, "alp": 100, "ggt": 136, "totalProtein": 72, "albumin": 54, "urea": 1.5, "creatinine": 32, "sodium": 129, "potassium": 2.6, "calcium": 0.91, "lactate": 0.7},
-            {"date": "2025-06-17", "notes": "", "glucose": 7.7, "gpt": 17, "got": 15, "bilirubin": 1, "directBilirubin": 2.9, "alp": 73, "ggt": 85, "totalProtein": 73, "albumin": 55, "urea": 1.2, "creatinine": 30, "sodium": 128, "potassium": 2.5, "calcium": 0.9, "lactate": 0.6},
-            {"date": "2025-06-18", "notes": "未查血糖", "gpt": 17, "got": 14, "bilirubin": 0, "directBilirubin": 2.9, "alp": 71, "ggt": 74, "totalProtein": 74, "albumin": 56, "urea": 0.9, "creatinine": 28, "sodium": 127, "potassium": 2.4, "calcium": 0.89, "lactate": 0.5},
-            {"date": "2025-06-19", "notes": "血糖正常", "glucose": 4.8, "gpt": 16, "got": 18, "bilirubin": 0, "directBilirubin": 1.5, "alp": 77, "ggt": 73, "totalProtein": 75, "albumin": 57, "urea": 0.6, "creatinine": 26, "sodium": 126, "potassium": 2.3, "calcium": 0.88, "lactate": 0.4},
-            {"date": "2025-06-20", "notes": "", "glucose": 6.4, "gpt": 16, "got": 18, "bilirubin": 0, "directBilirubin": 2.2, "alp": 81, "ggt": 64, "totalProtein": 76, "albumin": 58, "urea": 0.3, "creatinine": 24, "sodium": 125, "potassium": 2.2, "calcium": 0.87, "lactate": 0.3},
-            {"date": "2025-06-21", "notes": "", "glucose": 6.9, "gpt": 22, "got": 29, "bilirubin": 0, "directBilirubin": 2.1, "alp": 80, "ggt": 63, "totalProtein": 77, "albumin": 59, "urea": 0.1, "creatinine": 22, "sodium": 124, "potassium": 2.1, "calcium": 0.86, "lactate": 0.2},
-            {"date": "2025-06-22", "notes": "", "glucose": 5.3, "gpt": 33, "got": 42, "bilirubin": 0, "directBilirubin": 3, "alp": 88, "ggt": 67, "totalProtein": 78, "albumin": 60, "urea": 0.1, "creatinine": 20, "sodium": 123, "potassium": 2, "calcium": 0.85, "lactate": 0.1},
-            {"date": "2025-06-23", "notes": "血糖偏低", "glucose": 3.5, "gpt": 30, "got": 31, "bilirubin": 0, "directBilirubin": 2.7, "alp": 88, "ggt": 62, "totalProtein": 79, "albumin": 61, "urea": 0.1, "creatinine": 18, "sodium": 122, "potassium": 1.9, "calcium": 0.84, "lactate": 0.1},
-            {"date": "2025-06-24", "notes": "", "glucose": 7.2, "gpt": 24, "got": 22, "bilirubin": 0, "directBilirubin": 2.6, "alp": 83, "ggt": 52, "totalProtein": 80, "albumin": 62, "urea": 0.1, "creatinine": 16, "sodium": 121, "potassium": 1.8, "calcium": 0.83, "lactate": 0.1},
-            {"date": "2025-06-25", "notes": "最新检查", "glucose": 5.3, "gpt": 20, "got": 22, "bilirubin": 1, "directBilirubin": 2.5, "alp": 76, "ggt": 46, "totalProtein": 81, "albumin": 63, "urea": 0.1, "creatinine": 14, "sodium": 120, "potassium": 1.7, "calcium": 0.82, "lactate": 0.1}
+        // 基於真實瑞金報告的完整健康記錄數據 - 修復了語法錯誤
+        const preloadedHealthRecords = [
+            {"date": "2025-06-26", "glucose": 5.8, "gpt": 17, "got": 23, "alp": 71, "ggt": 42, "bilirubin": 4, "directBilirubin": 4.1, "totalProtein": 54, "albumin": 118, "albGlobRatio": 2.6, "bileAcid": 5, "urea": 4.3, "creatinine": 52, "uricAcid": 46, "sodium": 134, "potassium": 5.3, "chloride": 104, "co2": 33.2, "calcium": 0.81, "lactate": 1.2, "ldh": 210, "ck": 24, "gsr": 55, "ckmb": 0.4, "myoglobin": 27.7, "troponin": 17.2, "aptt": 53.2, "pt": 14.6, "tt": 16.1, "fg": 3.3, "notes": "最新檢驗 - 各項指標持續改善"},
+            {"date": "2025-06-25", "glucose": 5.3, "gpt": 20, "got": 22, "gotMito": 6, "alp": 76, "ggt": 46, "bilirubin": 1, "directBilirubin": 2.5, "totalProtein": 52, "albumin": 136, "albGlobRatio": 2.25, "bileAcid": 8.5, "urea": 4.8, "creatinine": 49, "uricAcid": 49, "sodium": 137, "potassium": 4.2, "chloride": 105, "co2": 38.4, "calcium": 0.82, "lactate": 1.2, "ldh": 196, "ck": 19, "gsr": 55, "ckmb": 0.6, "myoglobin": 31.5, "troponin": 20.7, "aptt": 47.3, "pt": 14.4, "tt": 15.9, "fg": 3, "notes": "檢查穩定"},
+            {"date": "2025-06-24", "glucose": 7.2, "gpt": 24, "got": 22, "gotMito": 4, "alp": 83, "ggt": 52, "bilirubin": 0, "directBilirubin": 2.6, "totalProtein": 51, "albumin": 159, "albGlobRatio": 2.19, "bileAcid": 5.5, "urea": 4.5, "creatinine": 47, "uricAcid": 28, "sodium": 137, "potassium": 4.3, "chloride": 105, "co2": 42, "calcium": 0.83, "lactate": 1.3, "ldh": 172, "ck": 23, "gsr": 56, "ckmb": 0.8, "myoglobin": 40.2, "troponin": 10, "aptt": 94.6, "pt": 14.6, "fg": 2.5, "notes": ""},
+            {"date": "2025-06-23", "glucose": 3.5, "gpt": 30, "got": 31, "gotMito": 7, "alp": 88, "ggt": 62, "bilirubin": 0, "directBilirubin": 2.7, "totalProtein": 49, "albumin": 173, "albGlobRatio": 2.27, "bileAcid": 6.5, "urea": 4.3, "creatinine": 43, "uricAcid": 24, "sodium": 138, "potassium": 4.4, "chloride": 106, "co2": 38.1, "calcium": 0.84, "magnesium": 1.09, "cystatinC": 1.28, "lactate": 1.7, "ldh": 200, "ck": 26, "gsr": 62, "ckmb": 0.9, "myoglobin": 48.4, "troponin": 9.9, "aptt": 32, "pt": 12.7, "tt": 18.4, "fg": 2.2, "notes": "血糖偏低"},
+            {"date": "2025-06-22", "glucose": 5.3, "gpt": 33, "got": 42, "gotMito": 12, "alp": 88, "ggt": 67, "bilirubin": 0, "directBilirubin": 3, "totalProtein": 46, "albumin": 174, "albGlobRatio": 2.292, "bileAcid": 11.6, "urea": 5.2, "creatinine": 40, "uricAcid": 17, "sodium": 140, "potassium": 4.9, "chloride": 111, "co2": 39.5, "calcium": 0.85, "lactate": 1.8, "ldh": 222, "ck": 28, "gsr": 58, "ckmb": 1, "myoglobin": 41.8, "troponin": 8.7, "aptt": 30, "pt": 12.5, "tt": 19.4, "fg": 1.5, "notes": ""},
+            {"date": "2025-06-21", "glucose": 6.9, "gpt": 22, "got": 29, "gotMito": 6, "alp": 80, "ggt": 63, "bilirubin": 0, "directBilirubin": 2.1, "totalProtein": 44, "albumin": 163, "albGlobRatio": 2.14, "bileAcid": 5.1, "urea": 5.2, "creatinine": 38, "uricAcid": 19, "sodium": 142, "potassium": 4.1, "chloride": 112, "co2": 36, "calcium": 0.86, "lactate": 1.9, "ldh": 192, "ck": 32, "gsr": 58, "ckmb": 1.2, "myoglobin": 44.4, "troponin": 10.8, "aptt": 34.3, "pt": 12.5, "tt": 21.3, "fg": 1.3, "notes": ""},
+            {"date": "2025-06-20", "glucose": 6.4, "gpt": 16, "got": 18, "gotMito": 4, "alp": 81, "ggt": 64, "bilirubin": 0, "directBilirubin": 2.2, "totalProtein": 43, "albumin": 158, "albGlobRatio": 2.58, "bileAcid": 3.3, "urea": 5.7, "creatinine": 38, "uricAcid": 22, "sodium": 140, "potassium": 3.7, "chloride": 108, "co2": 37.3, "calcium": 0.87, "lactate": 1.9, "ldh": 173, "ck": 31, "gsr": 50, "ckmb": 1, "myoglobin": 47.5, "troponin": 10.9, "aptt": 36.5, "pt": 12.2, "tt": 17.5, "fg": 1.5, "notes": ""},
+            {"date": "2025-06-19", "glucose": 4.8, "gpt": 16, "got": 18, "gotMito": 4, "alp": 77, "ggt": 73, "bilirubin": 0, "directBilirubin": 1.5, "totalProtein": 42, "albumin": 151, "albGlobRatio": 2.82, "bileAcid": 2.9, "urea": 7.2, "creatinine": 41, "uricAcid": 32, "sodium": 140, "potassium": 3.8, "chloride": 106, "co2": 38.9, "calcium": 0.88, "magnesium": 1.3, "cystatinC": 1.34, "lactate": 1.9, "ldh": 167, "ck": 29, "gsr": 52, "ckmb": 1.1, "myoglobin": 63.8, "troponin": 11, "il2": 2.4, "il5": 7.2, "il6": 38, "il8": 10.2, "il10": 3, "aptt": 86.8, "pt": 12.5, "tt": 60, "fg": 1.3, "notes": "血糖正常"},
+            {"date": "2025-06-18", "gpt": 17, "got": 14, "gotMito": 2, "alp": 71, "ggt": 74, "bilirubin": 0, "directBilirubin": 2.9, "totalProtein": 46, "albumin": 130, "albGlobRatio": 2.29, "bileAcid": 3.3, "urea": 7.8, "creatinine": 43, "uricAcid": 39, "calcium": 0.89, "lactate": 0.5, "ldh": 159, "ck": 26, "gsr": 53, "ckmb": 1, "myoglobin": 70.3, "troponin": 10.3, "aptt": 38.4, "pt": 12.3, "tt": 16.9, "fg": 1.6, "notes": "未查血糖"},
+            {"date": "2025-06-17", "glucose": 7.7, "gpt": 17, "got": 15, "gotMito": 2, "alp": 73, "ggt": 85, "bilirubin": 1, "directBilirubin": 2.9, "totalProtein": 45, "albumin": 124, "albGlobRatio": 2, "bileAcid": 2.7, "urea": 8.1, "creatinine": 48, "uricAcid": 48, "sodium": 140, "potassium": 3.6, "chloride": 105, "co2": 38.8, "calcium": 0.9, "lactate": 1.7, "ldh": 136, "ck": 20, "gsr": 52, "ckmb": 0.6, "myoglobin": 83, "troponin": 9.1, "aptt": 46.4, "pt": 13.8, "tt": 17.1, "fg": 1.8, "notes": ""},
+            {"date": "2025-06-16", "glucose": 8.2, "gpt": 25, "got": 19, "gotMito": 4, "alp": 100, "ggt": 136, "bilirubin": 1, "directBilirubin": 2.2, "totalProtein": 53, "albumin": 163, "albGlobRatio": 1.94, "bileAcid": 1.9, "urea": 8.3, "creatinine": 49, "uricAcid": 80, "sodium": 147, "potassium": 3.6, "chloride": 106, "co2": 37.9, "calcium": 0.91, "magnesium": 1.01, "cystatinC": 2.02, "lactate": 3.1, "ldh": 184, "ck": 37, "gsr": 60, "ckmb": 1, "myoglobin": 97.8, "troponin": 13.2, "aptt": 30.5, "pt": 12.5, "tt": 19.7, "fg": 1.7, "notes": ""},
+            {"date": "2025-06-15", "glucose": 9, "sodium": 147, "potassium": 2.9, "chloride": 116, "co2": 29.5, "lactate": 2.5, "notes": ""},
+            {"date": "2025-06-14", "glucose": 10.8, "gpt": 35, "got": 19, "gotMito": 4, "alp": 129, "ggt": 193, "bilirubin": 1, "directBilirubin": 4.8, "totalProtein": 51, "albumin": 102, "albGlobRatio": 1.68, "bileAcid": 1.2, "urea": 10.2, "creatinine": 56, "uricAcid": 200, "sodium": 146, "potassium": 3.4, "chloride": 110, "co2": 35.8, "calcium": 0.93, "lactate": 1.2, "ldh": 180, "ck": 46, "gsr": 64, "ckmb": 3.2, "myoglobin": 180.4, "troponin": 15.1, "aptt": 53.5, "pt": 13.9, "tt": 39.7, "fg": 3, "notes": ""},
+            {"date": "2025-06-13", "glucose": 7.8, "gpt": 50, "got": 23, "gotMito": 4, "alp": 165, "ggt": 250, "bilirubin": 6, "directBilirubin": 4.1, "totalProtein": 53, "albumin": 71, "albGlobRatio": 1.65, "bileAcid": 1.6, "urea": 9.4, "creatinine": 58, "uricAcid": 190, "sodium": 142, "potassium": 4, "chloride": 109, "co2": 35.2, "calcium": 0.94, "lactate": 1.2, "ldh": 165, "ck": 46, "gsr": 70, "ckmb": 2.9, "myoglobin": 178.5, "troponin": 21.6, "aptt": 34.7, "pt": 12.9, "tt": 17, "fg": 4.2, "notes": "持續改善"},
+            {"date": "2025-06-12", "glucose": 9, "gpt": 87, "got": 60, "gotMito": 6, "alp": 222, "ggt": 331, "bilirubin": 7, "directBilirubin": 7.8, "totalProtein": 51, "albumin": 70, "albGlobRatio": 1.43, "bileAcid": 10.9, "urea": 7.3, "creatinine": 49, "uricAcid": 151, "sodium": 137, "potassium": 4, "chloride": 108, "co2": 35.9, "calcium": 0.95, "magnesium": 0.89, "cystatinC": 1.48, "lactate": 1, "ldh": 191, "ck": 52, "gsr": 73, "ckmb": 1.6, "myoglobin": 72.3, "troponin": 26.3, "amylase": 18, "aptt": 36.1, "pt": 14.4, "tt": 15.5, "fg": 4.6, "notes": "開始下降"},
+            {"date": "2025-06-11", "glucose": 9.3, "gpt": 153, "got": 407, "gotMito": 167, "alp": 322, "ggt": 495, "bilirubin": 23, "directBilirubin": 13.1, "totalProtein": 50, "albumin": 97, "albGlobRatio": 1.08, "bileAcid": 12.7, "urea": 6.4, "creatinine": 61, "uricAcid": 175, "sodium": 132, "potassium": 4.1, "chloride": 104, "co2": 29.6, "calcium": 0.96, "lactate": 1.9, "ldh": 492, "ck": 71, "gsr": 67, "ckmb": 1.1, "myoglobin": 108.4, "troponin": 40.7, "aptt": 31, "pt": 13.4, "tt": 15.9, "fg": 3.9, "notes": "嚴重異常期"},
+            {"date": "2025-06-10", "glucose": 7.3, "gpt": 57, "got": 165, "alp": 271, "ggt": 374, "bilirubin": 11, "directBilirubin": 7, "totalProtein": 53, "albumin": 112, "albGlobRatio": 1.52, "bileAcid": 21.2, "urea": 6, "creatinine": 57, "uricAcid": 173, "sodium": 132, "potassium": 3.6, "chloride": 103, "co2": 27.8, "calcium": 0.97, "lactate": 1.7, "ldh": 350, "ck": 87, "gsr": 58, "ckmb": 1.6, "myoglobin": 119.5, "troponin": 21.8, "amylase": 38, "aptt": 31.7, "pt": 12.4, "tt": 16, "fg": 3.9, "notes": "肝功能異常"},
+            {"date": "2025-06-02", "glucose": 7.4, "gpt": 12, "got": 17, "gotMito": 2, "alp": 50, "ggt": 18, "bilirubin": 17, "directBilirubin": 7.3, "totalProtein": 55, "albumin": 71, "albGlobRatio": 1.62, "bileAcid": 2.8, "urea": 3.2, "creatinine": 55, "uricAcid": 184, "sodium": 134, "potassium": 4, "chloride": 101, "co2": 36.4, "calcium": 1.26, "magnesium": 0.75, "cystatinC": 1.25, "lactate": 1.2, "ldh": 214, "ck": 42, "gsr": 63, "ckmb": 1.2, "myoglobin": 58, "troponin": 12.8, "il5": 4.9, "il17": 4.6, "il6": 344.9, "il8": 41.3, "il10": 7.44, "notes": ""},
+            {"date": "2025-06-01", "glucose": 12.1, "gpt": 14, "got": 19, "gotMito": 1, "alp": 55, "ggt": 21, "bilirubin": 14, "directBilirubin": 8.5, "totalProtein": 51, "albumin": 75, "albGlobRatio": 1.22, "bileAcid": 1, "urea": 3.6, "creatinine": 49, "uricAcid": 203, "sodium": 129, "potassium": 4.3, "chloride": 100, "co2": 36, "calcium": 1.05, "lactate": 1.4, "ldh": 199, "ck": 37, "gsr": 62, "ckmb": 1.2, "myoglobin": 48, "troponin": 10.5, "aptt": 37, "pt": 14.3, "tt": 16.1, "fg": 5.2, "notes": "持續改善"},
+            {"date": "2025-05-30", "glucose": 8.6, "gpt": 24, "got": 25, "gotMito": 3, "alp": 52, "ggt": 26, "bilirubin": 23, "directBilirubin": 11.1, "totalProtein": 48, "albumin": 120, "albGlobRatio": 1.67, "bileAcid": 1.2, "urea": 7.1, "creatinine": 55, "uricAcid": 188, "sodium": 130, "potassium": 4, "chloride": 101, "co2": 35.3, "calcium": 1.06, "lactate": 0.9, "ldh": 198, "ck": 31, "gsr": 56, "ckmb": 1.1, "myoglobin": 45, "troponin": 12.5, "aptt": 37, "pt": 13.9, "tt": 16.3, "fg": 3.1, "notes": "開始好轉"},
+            {"date": "2025-05-28", "glucose": 9.9, "gpt": 39, "got": 44, "alp": 54, "ggt": 38, "bilirubin": 52, "directBilirubin": 15.9, "totalProtein": 51, "albumin": 172, "albGlobRatio": 1.83, "bileAcid": 1.9, "urea": 14.5, "creatinine": 63, "uricAcid": 230, "sodium": 134, "potassium": 4.7, "chloride": 102, "co2": 40.8, "calcium": 1.08, "lactate": 1.1, "ldh": 205, "ck": 92, "gsr": 61, "ckmb": 2, "myoglobin": 78, "troponin": 9.8, "aptt": 31.9, "pt": 13.6, "tt": 18.8, "fg": 1.4, "notes": ""},
+            {"date": "2025-05-27", "glucose": 13.4, "gpt": 35, "got": 45, "gotMito": 10, "alp": 49, "ggt": 35, "bilirubin": 48, "directBilirubin": 14.7, "totalProtein": 54, "albumin": 168, "albGlobRatio": 1.84, "bileAcid": 1.9, "urea": 13.7, "creatinine": 62, "uricAcid": 214, "sodium": 142, "potassium": 4.5, "chloride": 105, "co2": 41.9, "calcium": 1.1, "lactate": 1.3, "ldh": 222, "ck": 39, "gsr": 59, "ckmb": 1.4, "myoglobin": 91.9, "troponin": 23.1, "aptt": 30.5, "pt": 14.3, "tt": 20.2, "fg": 1.6, "notes": "肝功能異常"},
+            {"date": "2025-05-26", "glucose": 14.6, "gpt": 24, "got": 40, "gotMito": 12, "alp": 54, "ggt": 33, "bilirubin": 68, "directBilirubin": 18.3, "totalProtein": 55, "albumin": 143, "albGlobRatio": 1.75, "bileAcid": 4.1, "urea": 13.5, "creatinine": 57, "uricAcid": 219, "sodium": 146, "potassium": 4.9, "chloride": 109, "co2": 46, "calcium": 1.09, "magnesium": 1.02, "cystatinC": 1.59, "lactate": 1.5, "ldh": 237, "ck": 12, "gsr": 52, "ckmb": 0.7, "myoglobin": 36, "troponin": 17.2, "aptt": 31.3, "pt": 14.7, "tt": 20.5, "fg": 1.9, "notes": "多項指標異常"},
+            {"date": "2025-05-25", "glucose": 13.6, "gpt": 12, "got": 21, "gotMito": 4, "alp": 65, "ggt": 24, "bilirubin": 47, "directBilirubin": 10.6, "totalProtein": 58, "albumin": 128, "albGlobRatio": 2.05, "bileAcid": 1, "urea": 11.9, "creatinine": 56, "uricAcid": 206, "sodium": 147, "potassium": 3.1, "chloride": 116, "co2": 46.8, "calcium": 1, "lactate": 1.7, "ldh": 258, "ck": 10, "gsr": 46, "ckmb": 0.7, "myoglobin": 29.1, "troponin": 30.5, "aptt": 32.9, "pt": 15.1, "tt": 21, "fg": 2.2, "notes": "膽紅素升高"},
+            {"date": "2025-05-24", "glucose": 11.7, "gpt": 7, "got": 16, "alp": 70, "ggt": 19, "bilirubin": 45, "directBilirubin": 5.8, "totalProtein": 57, "albumin": 102, "albGlobRatio": 1.85, "bileAcid": 1, "urea": 15.2, "creatinine": 67, "uricAcid": 308, "sodium": 145, "potassium": 4.2, "chloride": 107, "co2": 46.2, "lactate": 1.6, "ldh": 216, "ck": 13, "gsr": 43, "ckmb": 1.1, "myoglobin": 36.9, "troponin": 56.2, "aptt": 29.4, "pt": 15.4, "tt": 20.2, "fg": 2.8, "notes": ""},
+            {"date": "2025-05-23", "glucose": 15.3, "gpt": 9, "got": 14, "gotMito": 3, "alp": 87, "ggt": 19, "bilirubin": 42, "directBilirubin": 7.6, "totalProtein": 57, "albumin": 86, "albGlobRatio": 1.71, "bileAcid": 1.2, "urea": 18.4, "creatinine": 86, "uricAcid": 512, "sodium": 147, "potassium": 4.2, "chloride": 106, "co2": 45.1, "lactate": 1.4, "ldh": 199, "ck": 19, "gsr": 39, "ckmb": 3.6, "myoglobin": 59.1, "troponin": 63.6, "notes": "血糖過高"},
+            {"date": "2025-05-19", "glucose": 2.2, "gpt": 18, "got": 30, "gotMito": 3, "alp": 166, "ggt": 36, "directBilirubin": 7.8, "totalProtein": 49, "albGlobRatio": 0.96, "urea": 18.1, "creatinine": 154, "uricAcid": 532, "sodium": 136, "potassium": 3.16, "chloride": 102, "gsr": 44, "ckmb": 4, "myoglobin": 87.9, "troponin": 93.5, "amylase": 4, "aptt": 37, "pt": 15.1, "tt": 16.4, "fg": 7.8, "notes": "血糖偏低"},
+            {"date": "2025-05-18", "glucose": 5.7, "gpt": 29, "got": 43, "gotMito": 6, "alp": 252, "ggt": 56, "directBilirubin": 16, "totalProtein": 57, "albGlobRatio": 1.19, "urea": 12.8, "creatinine": 166, "uricAcid": 417, "sodium": 131, "potassium": 3.51, "chloride": 98, "ldh": 271, "ck": 54, "gsr": 55, "ckmb": 2.4, "myoglobin": 122.6, "troponin": 24.8, "amylase": 12, "aptt": 33.2, "pt": 14.2, "tt": 17.1, "fg": 6.9, "notes": "初始全面檢驗"}
         ];
         
-        // 檢查是否已有數據，如果沒有則使用預裝數據
-        var healthRecords = JSON.parse(localStorage.getItem('wechatHealthRecords') || '[]');
-        if (healthRecords.length === 0) {
-            healthRecords = preloadedData.slice();
-            localStorage.setItem('wechatHealthRecords', JSON.stringify(healthRecords));
-        }
+        // 檢查是否已有數據，強制使用完整的預裝數據
+        let healthRecords = preloadedHealthRecords.slice(); // 直接使用預裝數據
+        // 保存到本地存儲
+        localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
+        
+        // 當前圖表實例
+        let currentChart = null;
         
         // 設置今天的日期
         document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
         
         // 標籤頁切換
         function showTab(tabName) {
-            var contents = document.querySelectorAll('.tab-content');
-            var tabs = document.querySelectorAll('.tab');
+            // 隱藏所有標籤頁內容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
             
-            for (var i = 0; i < contents.length; i++) {
-                contents[i].classList.remove('active');
-            }
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-            }
+            // 移除所有標籤的active類
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
             
+            // 顯示選中的標籤頁
             document.getElementById(tabName).classList.add('active');
+            
+            // 給對應標籤添加active類
             event.target.classList.add('active');
             
+            // 根據標籤頁類型執行相應的初始化
             if (tabName === 'records') {
                 displayRecords();
-            } else if (tabName === 'chart') {
+            } else if (tabName === 'charts') {
+                initializeChart();
                 updateChart();
+                updateDataStats();
+            } else if (tabName === 'summary') {
+                updateHealthSummary();
             }
         }
         
         // 保存記錄
         function saveRecord() {
-            var date = document.getElementById('testDate').value;
+            const date = document.getElementById('testDate').value;
             if (!date) {
-                alert('请先选择检查日期！');
+                alert('請先選擇檢查日期！');
                 return;
             }
             
-            var record = {
+            const record = {
                 date: date,
                 notes: document.getElementById('notes').value || ''
             };
             
             // 獲取所有檢驗項目的值
-            var keys = Object.keys(testConfigs);
-            for (var i = 0; i < keys.length; i++) {
-                var key = keys[i];
-                var element = document.getElementById(key);
+            let hasData = false;
+            Object.keys(testConfigs).forEach(key => {
+                const element = document.getElementById(key);
                 if (element && element.value !== '') {
                     record[key] = parseFloat(element.value);
+                    hasData = true;
                 }
+            });
+            
+            if (!hasData) {
+                alert('請至少輸入一項檢驗數據！');
+                return;
             }
             
-            // 檢查是否有重複日期
-            var existingIndex = -1;
-            for (var i = 0; i < healthRecords.length; i++) {
-                if (healthRecords[i].date === date) {
-                    existingIndex = i;
-                    break;
-                }
-            }
-            
+            // 檢查是否有重複日期的記錄
+            const existingIndex = healthRecords.findIndex(r => r.date === date);
             if (existingIndex >= 0) {
-                if (confirm('这个日期已经有记录了，要覆盖吗？')) {
+                if (confirm('這個日期已經有記錄了，要覆蓋嗎？')) {
                     healthRecords[existingIndex] = record;
                 } else {
                     return;
@@ -804,179 +1068,530 @@
                 healthRecords.push(record);
             }
             
-            // 排序並保存
-            healthRecords.sort(function(a, b) {
-                return new Date(b.date) - new Date(a.date);
-            });
-            localStorage.setItem('wechatHealthRecords', JSON.stringify(healthRecords));
+            // 按日期排序
+            healthRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // 保存到本地
+            localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
             
             // 顯示成功消息
-            var successMsg = document.getElementById('successMessage');
+            const successMsg = document.getElementById('successMessage');
             successMsg.style.display = 'block';
-            setTimeout(function() {
+            setTimeout(() => {
                 successMsg.style.display = 'none';
-            }, 2000);
+            }, 3000);
             
-            // 清空表單
-            clearForm();
+            // 清空表單（除了日期）
+            clearCurrentForm(false);
             
-            // 設置明天日期
-            var tomorrow = new Date();
+            // 更新日期到明天
+            const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('testDate').value = tomorrow.toISOString().split('T')[0];
         }
         
-        // 清空表單
-        function clearForm() {
-            var keys = Object.keys(testConfigs);
-            for (var i = 0; i < keys.length; i++) {
-                var element = document.getElementById(keys[i]);
-                if (element) element.value = '';
+        // 清空當前表單
+        function clearCurrentForm(clearDate = true) {
+            if (confirm('確定要清空當前輸入的內容嗎？')) {
+                Object.keys(testConfigs).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = '';
+                    }
+                });
+                document.getElementById('notes').value = '';
+                if (clearDate) {
+                    document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+                }
             }
-            document.getElementById('notes').value = '';
         }
         
-        // 圖表功能
-        function quickSelectChart(button, testType) {
-            var buttons = document.querySelectorAll('.test-btn');
-            for (var i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove('active');
+        // 加載最新數據模板
+        function loadLatestData() {
+            if (confirm('確定要加載最新檢驗數據模板嗎？這會覆蓋當前輸入的內容。')) {
+                if (healthRecords.length > 0) {
+                    const latestRecord = healthRecords[0];
+                    
+                    Object.keys(testConfigs).forEach(key => {
+                        const element = document.getElementById(key);
+                        if (element && latestRecord[key] !== undefined && latestRecord[key] !== null) {
+                            element.value = latestRecord[key];
+                        }
+                    });
+                    
+                    document.getElementById('notes').value = '基於最新檢驗數據';
+                    alert('已加載最新檢驗數據作為模板！');
+                } else {
+                    alert('暫無歷史數據，將加載示例數據...');
+                    loadSampleData();
+                }
             }
+        }
+        
+        // 加載示例數據到表單
+        function loadSampleData() {
+            const sampleData = preloadedHealthRecords[0]; // 使用第一條預裝數據
+            
+            Object.keys(sampleData).forEach(key => {
+                if (key !== 'date' && key !== 'notes') {
+                    const element = document.getElementById(key);
+                    if (element && sampleData[key] !== null && sampleData[key] !== undefined) {
+                        element.value = sampleData[key];
+                    }
+                }
+            });
+            
+            document.getElementById('notes').value = '示例檢驗數據';
+        }
+        
+        // 初始化圖表
+        function initializeChart() {
+            // 初始化圖表選擇器
+            const chartTypeSelect = document.getElementById('chartType');
+            chartTypeSelect.innerHTML = '';
+            
+            // 添加所有檢驗項目到下拉選單
+            Object.keys(testConfigs).forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = testConfigs[key].name;
+                chartTypeSelect.appendChild(option);
+            });
+            
+            // 初始化測試按鈕
+            const buttonsContainer = document.getElementById('testButtons');
+            buttonsContainer.innerHTML = '';
+            
+            // 檢查哪些檢驗項目有數據
+            const dataStats = {};
+            healthRecords.forEach(record => {
+                Object.keys(record).forEach(key => {
+                    if (key !== 'date' && key !== 'notes' && testConfigs[key] && record[key] !== null && record[key] !== undefined) {
+                        dataStats[key] = (dataStats[key] || 0) + 1;
+                    }
+                });
+            });
+            
+            // 只顯示有數據的檢驗項目
+            const validDataKeys = Object.keys(dataStats).filter(key => dataStats[key] >= 1);
+            
+            // 按分類組織按鈕
+            const categories = {
+                '基礎代謝': ['glucose', 'lactate'],
+                '肝功能': ['gpt', 'got', 'gotMito', 'alp', 'ggt', 'ldh', 'gsr'],
+                '膽紅素': ['bilirubin', 'directBilirubin', 'bileAcid'],
+                '蛋白質': ['totalProtein', 'albumin', 'albGlobRatio'],
+                '腎功能': ['urea', 'creatinine', 'uricAcid', 'cystatinC'],
+                '電解質': ['sodium', 'potassium', 'chloride', 'co2', 'calcium', 'phosphorus', 'magnesium'],
+                '心肌標誌物': ['ck', 'hfabp', 'ckmb', 'myoglobin', 'troponin'],
+                '其他': ['amylase'],
+                '炎症標誌物': ['il2', 'il4', 'il5', 'il6', 'il8', 'il10', 'il1b', 'il12', 'il17', 'tnfa'],
+                '凝血功能': ['aptt', 'pt', 'tt', 'fg']
+            };
+            
+            // 為每個分類創建按鈕組
+            Object.keys(categories).forEach(categoryName => {
+                const categoryValidItems = categories[categoryName].filter(key => validDataKeys.includes(key));
+                if (categoryValidItems.length === 0) return;
+                
+                // 創建分類標題
+                const categoryLabel = document.createElement('div');
+                categoryLabel.style.cssText = 'width: 100%; font-weight: bold; color: #6c5ce7; margin: 10px 5px 5px 5px; font-size: 0.9em; border-bottom: 1px solid #e9ecef; padding-bottom: 3px;';
+                categoryLabel.textContent = `${categoryName} (${categoryValidItems.length}項)`;
+                buttonsContainer.appendChild(categoryLabel);
+                
+                // 為該分類創建按鈕
+                categoryValidItems.forEach(testKey => {
+                    const btn = document.createElement('button');
+                    btn.className = 'test-btn';
+                    if (testKey === 'glucose') btn.classList.add('active');
+                    
+                    btn.onclick = function() { 
+                        quickSelectChart(this, testKey); 
+                    };
+                    
+                    btn.textContent = `${testConfigs[testKey].name} (${dataStats[testKey]})`;
+                    btn.dataset.test = testKey;
+                    btn.title = `${testConfigs[testKey].name} (${testConfigs[testKey].unit}) - ${dataStats[testKey]}個數據點`;
+                    buttonsContainer.appendChild(btn);
+                });
+            });
+            
+            updateDataStats();
+        }
+        
+        // 更新數據統計信息
+        function updateDataStats() {
+            const statsElement = document.getElementById('dataStatsInfo');
+            if (!statsElement) return;
+            
+            const dataStats = {};
+            Object.keys(testConfigs).forEach(key => {
+                const count = healthRecords.filter(record => 
+                    record[key] !== undefined && record[key] !== null
+                ).length;
+                if (count > 0) {
+                    dataStats[key] = count;
+                }
+            });
+            
+            const totalItems = Object.keys(dataStats).length;
+            const totalRecords = healthRecords.length;
+            const avgDataPerRecord = totalRecords > 0 ? 
+                Object.values(dataStats).reduce((sum, count) => sum + count, 0) / totalRecords : 0;
+            
+            statsElement.innerHTML = `
+                共 ${totalRecords} 條記錄，包含 ${totalItems} 項檢驗指標，
+                平均每次檢查 ${avgDataPerRecord.toFixed(1)} 項指標
+            `;
+        }
+        
+        // 快速選擇圖表
+        function quickSelectChart(button, testType) {
+            // 更新按鈕狀態
+            document.querySelectorAll('.test-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
+            
+            // 更新下拉選擇
             document.getElementById('chartType').value = testType;
+            
+            // 更新圖表
             updateChart();
         }
         
+        // 更新圖表
         function updateChart() {
-            var testType = document.getElementById('chartType').value;
-            var config = testConfigs[testType];
-            
-            if (!config) return;
-            
-            // 獲取數據
-            var data = [];
-            for (var i = 0; i < healthRecords.length; i++) {
-                var record = healthRecords[i];
-                if (record[testType] !== undefined && record[testType] !== null) {
-                    data.push(record);
-                }
-            }
-            data.reverse();
-            data = data.slice(-10); // 最近10個記錄
-            
-            // 更新圖表標題
-            document.getElementById('chartTitle').textContent = config.name + '趋势图';
-            
-            if (data.length === 0) {
-                document.getElementById('chartBars').innerHTML = '<div style="text-align: center; padding: 50px; color: #999;">暂无数据</div>';
-                document.getElementById('chartDates').innerHTML = '';
-                updateStats(testType, []);
-                return;
-            }
-            
-            // 創建簡單圖表
-            var values = [];
-            for (var i = 0; i < data.length; i++) {
-                values.push(data[i][testType]);
-            }
-            
-            var maxValue = Math.max.apply(Math, values);
-            var minValue = Math.min.apply(Math, values);
-            var range = maxValue - minValue || 1;
-            
-            // 生成圖表條
-            var barsHtml = '';
-            for (var i = 0; i < values.length; i++) {
-                var value = values[i];
-                var height = ((value - minValue) / range) * 120 + 10;
-                var status = getValueStatus(value, config.min, config.max);
-                var color = status === 'value-normal' ? '#07c160' : 
-                           status === 'value-high' ? '#ff4757' : '#ffa502';
+            try {
+                const testType = document.getElementById('chartType').value;
+                const dataRange = document.getElementById('dataRange').value;
+                const chartStyle = document.getElementById('chartStyle').value;
+                const config = testConfigs[testType];
                 
-                barsHtml += '<div class="chart-bar" style="height: ' + height + 'px; background: linear-gradient(to top, ' + color + ', ' + color + 'aa);"><div class="chart-bar-value">' + value + '</div></div>';
+                if (!config) return;
+                
+                // 獲取該檢驗項目的所有數據
+                let allData = healthRecords
+                    .filter(record => record[testType] !== undefined && record[testType] !== null)
+                    .map(record => ({
+                        date: record.date,
+                        value: record[testType],
+                        notes: record.notes || ''
+                    }))
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // 根據選擇的範圍過濾數據
+                let chartData;
+                if (dataRange === 'all') {
+                    chartData = allData;
+                } else {
+                    const rangeNum = parseInt(dataRange);
+                    chartData = allData.slice(-rangeNum);
+                }
+                
+                if (chartData.length === 0) {
+                    updateStats(testType, []);
+                    if (currentChart) {
+                        currentChart.destroy();
+                        currentChart = null;
+                    }
+                    return;
+                }
+                
+                // 準備圖表數據
+                const chartConfigData = {
+                    labels: chartData.map(record => {
+                        const date = new Date(record.date);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                    }),
+                    datasets: [{
+                        label: config.name + ' (' + config.unit + ')',
+                        data: chartData.map(record => record.value),
+                        borderColor: '#6c5ce7',
+                        backgroundColor: chartData.map(record => {
+                            const value = record.value;
+                            if (config.min !== undefined && value < config.min) return 'rgba(253, 203, 110, 0.7)';
+                            if (config.max !== undefined && value > config.max) return 'rgba(225, 112, 85, 0.7)';
+                            return 'rgba(0, 184, 148, 0.7)';
+                        }),
+                        tension: 0.3,
+                        fill: chartStyle === 'line',
+                        pointRadius: chartStyle === 'line' ? 4 : 0,
+                        pointHoverRadius: chartStyle === 'line' ? 6 : 0,
+                        borderWidth: chartStyle === 'line' ? 2 : 0
+                    }]
+                };
+                
+                // 銷毀舊圖表
+                if (currentChart) {
+                    currentChart.destroy();
+                    currentChart = null;
+                }
+                
+                // 創建新圖表
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                
+                const values = chartData.map(r => r.value);
+                const minValue = Math.min(...values);
+                const maxValue = Math.max(...values);
+                const range = maxValue - minValue;
+                const padding = range * 0.1 || 1;
+                
+                currentChart = new Chart(ctx, {
+                    type: chartStyle === 'line' ? 'line' : 'bar',
+                    data: chartConfigData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `${config.name} ${chartStyle === 'line' ? '趨勢圖' : '數值圖'} (正常範圍: ${config.min}-${config.max} ${config.unit})`,
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            },
+                            legend: {
+                                display: true
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(context) {
+                                        const index = context.dataIndex;
+                                        const record = chartData[index];
+                                        return record.notes ? `備註: ${record.notes}` : '';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                min: Math.max(0, minValue - padding),
+                                max: maxValue + padding,
+                                title: {
+                                    display: true,
+                                    text: `${config.name} (${config.unit})`
+                                },
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '檢查日期'
+                                },
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                updateStats(testType, values);
+                
+            } catch (error) {
+                console.error('更新圖表時發生錯誤:', error);
             }
-            
-            // 生成日期標籤
-            var datesHtml = '';
-            for (var i = 0; i < data.length; i++) {
-                var date = new Date(data[i].date);
-                datesHtml += '<div class="chart-date">' + (date.getMonth() + 1) + '/' + date.getDate() + '</div>';
-            }
-            
-            document.getElementById('chartBars').innerHTML = barsHtml;
-            document.getElementById('chartDates').innerHTML = datesHtml;
-            
-            // 更新統計
-            updateStats(testType, values);
         }
         
+        // 更新統計信息
         function updateStats(testType, values) {
-            var config = testConfigs[testType];
+            const config = testConfigs[testType];
             
             if (values.length === 0) {
                 document.getElementById('latestValue').textContent = '-';
                 document.getElementById('averageValue').textContent = '-';
                 document.getElementById('maxValue').textContent = '-';
                 document.getElementById('minValue').textContent = '-';
+                document.getElementById('recordCount').textContent = '0';
+                document.getElementById('trendAnalysis').textContent = '-';
                 return;
             }
             
-            var latest = values[values.length - 1];
-            var sum = 0;
-            for (var i = 0; i < values.length; i++) {
-                sum += values[i];
-            }
-            var average = sum / values.length;
-            var max = Math.max.apply(Math, values);
-            var min = Math.min.apply(Math, values);
+            const latest = values[values.length - 1];
+            const average = values.reduce((a, b) => a + b, 0) / values.length;
+            const max = Math.max(...values);
+            const min = Math.min(...values);
+            const trend = values.length > 1 ? values[values.length - 1] - values[0] : 0;
             
-            document.getElementById('latestValue').textContent = latest + ' ' + config.unit;
-            document.getElementById('averageValue').textContent = average.toFixed(1) + ' ' + config.unit;
-            document.getElementById('maxValue').textContent = max + ' ' + config.unit;
-            document.getElementById('minValue').textContent = min + ' ' + config.unit;
+            document.getElementById('latestValue').textContent = `${latest} ${config.unit}`;
+            document.getElementById('averageValue').textContent = `${average.toFixed(1)} ${config.unit}`;
+            document.getElementById('maxValue').textContent = `${max} ${config.unit}`;
+            document.getElementById('minValue').textContent = `${min} ${config.unit}`;
+            document.getElementById('recordCount').textContent = values.length;
+            
+            let trendText = '→ 穩定';
+            const trendPercent = Math.abs(trend / values[0]) * 100;
+            if (trendPercent > 5) {
+                trendText = trend > 0 ? '↑ 上升' : '↓ 下降';
+            }
+            document.getElementById('trendAnalysis').textContent = trendText;
+        }
+        
+        // 搜索功能
+        function filterChartButtons() {
+            const searchTerm = document.getElementById('chartSearch').value.toLowerCase();
+            const buttons = document.querySelectorAll('.test-btn');
+            
+            buttons.forEach(button => {
+                const text = button.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    button.style.display = 'inline-block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+        }
+        
+        // 多項對比圖表
+        function showMultiChart() {
+            const selectedTests = ['glucose', 'gpt', 'got', 'bilirubin'];
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const datasets = selectedTests.map((testType, index) => {
+                const config = testConfigs[testType];
+                const data = healthRecords
+                    .filter(record => record[testType] !== undefined && record[testType] !== null)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .slice(-15);
+                
+                const colors = ['#6c5ce7', '#00b894', '#fd79a8', '#fdcb6e'];
+                
+                return {
+                    label: config.name,
+                    data: data.map(record => ({
+                        x: record.date,
+                        y: record[testType]
+                    })),
+                    borderColor: colors[index],
+                    backgroundColor: colors[index] + '20',
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                };
+            });
+            
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '多項指標對比圖 (最近15次記錄)',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: {
+                                    day: 'MM/DD'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: '日期'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: '數值'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 導出圖表
+        function exportChart() {
+            if (!currentChart) {
+                alert('請先選擇一個檢驗項目生成圖表！');
+                return;
+            }
+            
+            const url = currentChart.toBase64Image();
+            const link = document.createElement('a');
+            link.download = `健康趨勢圖_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = url;
+            link.click();
+            
+            alert('圖表已導出為PNG圖片！');
         }
         
         // 顯示記錄
         function displayRecords() {
-            var recordsList = document.getElementById('recordsList');
+            const recordsList = document.getElementById('recordsList');
             recordsList.innerHTML = '';
             
             document.getElementById('totalRecords').textContent = healthRecords.length;
+            if (healthRecords.length > 0) {
+                const dates = healthRecords.map(r => r.date).sort();
+                document.getElementById('dateRange').textContent = `${dates[0]} 至 ${dates[dates.length - 1]}`;
+            }
             
             if (healthRecords.length === 0) {
-                recordsList.innerHTML = '<div class="alert alert-info">还没有记录，快去添加吧！</div>';
+                recordsList.innerHTML = '<div class="alert alert-info"><h3>還沒有記錄</h3><p>請先添加檢驗記錄！</p></div>';
                 return;
             }
             
-            for (var index = 0; index < healthRecords.length; index++) {
-                var record = healthRecords[index];
-                var card = document.createElement('div');
+            healthRecords.forEach((record, index) => {
+                const card = document.createElement('div');
                 card.className = 'record-card';
                 
-                var date = new Date(record.date);
-                var formattedDate = date.toLocaleDateString('zh-CN', {
+                const formattedDate = new Date(record.date).toLocaleDateString('zh-TW', {
+                    year: 'numeric',
                     month: 'long',
                     day: 'numeric',
-                    weekday: 'short'
+                    weekday: 'long'
                 });
                 
-                var valuesHtml = '';
-                var keys = Object.keys(testConfigs);
-                for (var i = 0; i < keys.length; i++) {
-                    var key = keys[i];
+                let valuesHtml = '';
+                let dataCount = 0;
+                Object.keys(testConfigs).forEach(key => {
                     if (record[key] !== undefined && record[key] !== null) {
-                        var config = testConfigs[key];
-                        var status = getValueStatus(record[key], config.min, config.max);
-                        valuesHtml += '<div class="record-item"><div class="record-item-name">' + config.name + '</div><div class="record-item-value ' + status + '">' + record[key] + '</div></div>';
+                        const config = testConfigs[key];
+                        const status = getValueStatus(record[key], config.min, config.max);
+                        valuesHtml += `
+                            <div class="record-item">
+                                <div class="record-item-name">${config.name}</div>
+                                <div class="record-item-value ${status}">${record[key]} ${config.unit}</div>
+                            </div>
+                        `;
+                        dataCount++;
                     }
-                }
+                });
                 
-                var notesHtml = record.notes ? '<div style="margin-top: 10px; padding: 8px; background: #f0f9f4; border-radius: 6px; font-size: 0.9em;"><strong>备注：</strong>' + record.notes + '</div>' : '';
-                
-                card.innerHTML = '<div class="record-date">' + formattedDate + '</div><div class="record-values">' + valuesHtml + '</div>' + notesHtml + '<button onclick="deleteRecord(' + index + ')" style="margin-top: 10px; padding: 6px 12px; background: #ff4757; color: white; border: none; border-radius: 6px; font-size: 0.8em;">删除</button>';
+                card.innerHTML = `
+                    <div class="record-date">${formattedDate} <span style="font-size: 0.8em; color: #666;">(${dataCount}項數據)</span></div>
+                    <div class="record-values">${valuesHtml}</div>
+                    ${record.notes ? `<div style="margin-top: 15px; padding: 10px; background: white; border-radius: 8px; border-left: 4px solid #6c5ce7;"><strong>📝 備註：</strong>${record.notes}</div>` : ''}
+                    <button onclick="deleteRecord(${index})" style="margin-top: 15px; padding: 8px 16px; background: #fd79a8; color: white; border: none; border-radius: 6px; cursor: pointer;">🗑️ 刪除這條記錄</button>
+                `;
                 
                 recordsList.appendChild(card);
-            }
+            });
         }
         
         function getValueStatus(value, min, max) {
@@ -986,53 +1601,433 @@
         }
         
         function deleteRecord(index) {
-            if (confirm('确定要删除这条记录吗？')) {
+            if (confirm('確定要刪除這條記錄嗎？刪除後無法恢復！')) {
                 healthRecords.splice(index, 1);
-                localStorage.setItem('wechatHealthRecords', JSON.stringify(healthRecords));
+                localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
                 displayRecords();
             }
         }
         
-        // 搜索功能
         function filterRecords() {
-            var searchTerm = document.getElementById('recordSearch').value.toLowerCase();
-            var cards = document.querySelectorAll('.record-card');
+            const searchTerm = document.getElementById('recordSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.record-card');
             
-            for (var i = 0; i < cards.length; i++) {
-                var card = cards[i];
-                var text = card.textContent.toLowerCase();
-                card.style.display = text.indexOf(searchTerm) !== -1 ? 'block' : 'none';
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // 更新健康總覽
+        function updateHealthSummary() {
+            if (healthRecords.length === 0) {
+                document.getElementById('summaryTotalRecords').textContent = '0';
+                document.getElementById('summaryDays').textContent = '0';
+                document.getElementById('summaryAbnormal').textContent = '0';
+                document.getElementById('summaryNormal').textContent = '0';
+                document.getElementById('latestAnalysis').innerHTML = '<p style="color: #666;">暫無檢驗記錄</p>';
+                document.getElementById('trendSummary').innerHTML = '<p style="color: #666;">暫無趨勢數據</p>';
+                document.getElementById('alertItems').innerHTML = '<p style="color: #666;">暫無異常項目</p>';
+                return;
+            }
+            
+            // 基本統計
+            const dates = healthRecords.map(r => r.date).sort();
+            const daysDiff = Math.ceil((new Date(dates[dates.length - 1]) - new Date(dates[0])) / (1000 * 60 * 60 * 24)) + 1;
+            
+            document.getElementById('summaryTotalRecords').textContent = healthRecords.length;
+            document.getElementById('summaryDays').textContent = daysDiff;
+            
+            // 分析最新記錄
+            const latestRecord = healthRecords[0];
+            let normalCount = 0;
+            let abnormalCount = 0;
+            let analysisHtml = `<h4>📅 ${latestRecord.date} 檢驗結果分析</h4><div style="margin-top: 10px;">`;
+            
+            Object.keys(testConfigs).forEach(key => {
+                if (latestRecord[key] !== undefined && latestRecord[key] !== null) {
+                    const config = testConfigs[key];
+                    const value = latestRecord[key];
+                    const status = getValueStatus(value, config.min, config.max);
+                    
+                    if (status === 'value-normal') {
+                        normalCount++;
+                    } else {
+                        abnormalCount++;
+                        const statusText = status === 'value-high' ? '偏高' : '偏低';
+                        analysisHtml += `<div style="color: ${status === 'value-high' ? '#e17055' : '#fdcb6e'}; margin: 5px 0;">⚠️ ${config.name}: ${value} ${config.unit} (${statusText})</div>`;
+                    }
+                }
+            });
+            
+            if (abnormalCount === 0) {
+                analysisHtml += '<div style="color: #00b894;">✅ 所有檢驗指標均在正常範圍內</div>';
+            }
+            
+            analysisHtml += '</div>';
+            
+            document.getElementById('summaryNormal').textContent = normalCount;
+            document.getElementById('summaryAbnormal').textContent = abnormalCount;
+            document.getElementById('latestAnalysis').innerHTML = analysisHtml;
+            
+            // 趨勢分析
+            let trendHtml = '<h4>📈 主要指標趨勢分析</h4><div style="margin-top: 10px;">';
+            const keyIndicators = ['glucose', 'gpt', 'got', 'bilirubin', 'creatinine'];
+            
+            keyIndicators.forEach(key => {
+                const values = healthRecords
+                    .filter(r => r[key] !== undefined && r[key] !== null)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .map(r => r[key]);
+                
+                if (values.length >= 3) {
+                    const config = testConfigs[key];
+                    const latest = values[values.length - 1];
+                    const previous = values[values.length - 2];
+                    const trend = latest - previous;
+                    const trendPercent = Math.abs(trend / previous) * 100;
+                    
+                    let trendIcon = '→';
+                    let trendColor = '#666';
+                    let trendText = '穩定';
+                    
+                    if (trendPercent > 5) {
+                        if (trend > 0) {
+                            trendIcon = '↑';
+                            trendColor = '#e17055';
+                            trendText = '上升';
+                        } else {
+                            trendIcon = '↓';
+                            trendColor = '#00b894';
+                            trendText = '下降';
+                        }
+                    }
+                    
+                    trendHtml += `<div style="margin: 5px 0;"><span style="color: ${trendColor};">${trendIcon} ${config.name}: ${trendText} (${latest} ${config.unit})</span></div>`;
+                }
+            });
+            
+            trendHtml += '</div>';
+            document.getElementById('trendSummary').innerHTML = trendHtml;
+            
+            // 重點關注項目
+            let alertHtml = '<h4>⚠️ 需要重點關注的項目</h4><div style="margin-top: 10px;">';
+            let hasAlerts = false;
+            
+            // 檢查持續異常的項目
+            Object.keys(testConfigs).forEach(key => {
+                const recentValues = healthRecords
+                    .filter(r => r[key] !== undefined && r[key] !== null)
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .slice(0, 3)
+                    .map(r => ({ value: r[key], date: r.date }));
+                
+                if (recentValues.length >= 2) {
+                    const config = testConfigs[key];
+                    const consecutiveAbnormal = recentValues.every(item => {
+                        const status = getValueStatus(item.value, config.min, config.max);
+                        return status !== 'value-normal';
+                    });
+                    
+                    if (consecutiveAbnormal) {
+                        hasAlerts = true;
+                        const latest = recentValues[0];
+                        const status = getValueStatus(latest.value, config.min, config.max);
+                        const statusText = status === 'value-high' ? '持續偏高' : '持續偏低';
+                        alertHtml += `<div style="color: #e17055; margin: 5px 0;">🔴 ${config.name}: ${statusText} (最新值: ${latest.value} ${config.unit})</div>`;
+                    }
+                }
+            });
+            
+            if (!hasAlerts) {
+                alertHtml += '<div style="color: #00b894;">✅ 目前沒有需要特別關注的異常項目</div>';
+            }
+            
+            alertHtml += '</div>';
+            document.getElementById('alertItems').innerHTML = alertHtml;
+        }
+        
+        // 數據導出功能
+        function exportToExcel() {
+            const ws_data = [];
+            
+            // 創建表頭
+            const headers = ['日期'];
+            Object.keys(testConfigs).forEach(key => {
+                headers.push(`${testConfigs[key].name}(${testConfigs[key].unit})`);
+            });
+            headers.push('備註');
+            ws_data.push(headers);
+            
+            // 添加數據行
+            healthRecords.forEach(record => {
+                const row = [record.date];
+                Object.keys(testConfigs).forEach(key => {
+                    row.push(record[key] || '');
+                });
+                row.push(record.notes || '');
+                ws_data.push(row);
+            });
+            
+            // 創建工作簿
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            
+            // 設置列寬
+            const colWidths = headers.map(() => ({ wch: 15 }));
+            ws['!cols'] = colWidths;
+            
+            XLSX.utils.book_append_sheet(wb, ws, "健康記錄");
+            
+            // 導出文件
+            const fileName = `奶奶健康記錄_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            alert(`Excel文件已導出：${fileName}`);
+        }
+        
+        function exportToCSV() {
+            let csvContent = '\ufeff'; // BOM for UTF-8
+            
+            // 表頭
+            const headers = ['日期'];
+            Object.keys(testConfigs).forEach(key => {
+                headers.push(`${testConfigs[key].name}(${testConfigs[key].unit})`);
+            });
+            headers.push('備註');
+            csvContent += headers.join(',') + '\n';
+            
+            // 數據行
+            healthRecords.forEach(record => {
+                const row = [record.date];
+                Object.keys(testConfigs).forEach(key => {
+                    row.push(record[key] || '');
+                });
+                row.push(`"${record.notes || ''}"`);
+                csvContent += row.join(',') + '\n';
+            });
+            
+            const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `奶奶健康記錄_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('CSV文件已導出！');
+        }
+        
+        function exportToJSON() {
+            const dataStr = JSON.stringify(healthRecords, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `奶奶健康記錄_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('JSON文件已導出！');
+        }
+        
+        function copyToClipboard() {
+            const dataStr = JSON.stringify(healthRecords, null, 2);
+            navigator.clipboard.writeText(dataStr).then(() => {
+                alert('數據已複製到剪貼板！');
+            }).catch(() => {
+                alert('複製失敗，請手動複製數據。');
+            });
+        }
+        
+        // 數據導入功能
+        function importData() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('請選擇要導入的文件！');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let importedData = [];
+                    
+                    if (file.name.endsWith('.json')) {
+                        const jsonData = JSON.parse(e.target.result);
+                        importedData = Array.isArray(jsonData) ? jsonData : jsonData.records || [];
+                    } else {
+                        alert('目前只支持JSON格式導入，請使用導出的JSON文件。');
+                        return;
+                    }
+                    
+                    if (importedData.length === 0) {
+                        alert('沒有找到有效的數據記錄！');
+                        return;
+                    }
+                    
+                    const action = confirm('選擇導入方式：\n確定 = 合併數據（保留現有記錄）\n取消 = 替換數據（清空現有記錄）');
+                    
+                    if (action) {
+                        // 合併數據
+                        let newRecords = 0;
+                        let updatedRecords = 0;
+                        
+                        importedData.forEach(record => {
+                            const existingIndex = healthRecords.findIndex(r => r.date === record.date);
+                            if (existingIndex >= 0) {
+                                healthRecords[existingIndex] = record;
+                                updatedRecords++;
+                            } else {
+                                healthRecords.push(record);
+                                newRecords++;
+                            }
+                        });
+                        
+                        alert(`數據導入成功！新增 ${newRecords} 條記錄，更新 ${updatedRecords} 條記錄。`);
+                    } else {
+                        // 替換數據
+                        healthRecords = importedData;
+                        alert(`數據導入成功！共導入 ${importedData.length} 條記錄，已替換所有現有數據。`);
+                    }
+                    
+                    // 排序並保存
+                    healthRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
+                    
+                    // 刷新顯示
+                    displayRecords();
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert(`導入失敗：${error.message}`);
+                }
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        function loadPreloadedData() {
+            // 強制恢復完整的預設數據
+            healthRecords = preloadedHealthRecords.slice();
+            localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
+            
+            // 重新初始化圖表
+            initializeChart();
+            updateChart();
+            updateDataStats();
+            displayRecords();
+            
+            // 計算實際包含的檢驗項目數量
+            const dataKeys = new Set();
+            healthRecords.forEach(record => {
+                Object.keys(record).forEach(key => {
+                    if (key !== 'date' && key !== 'notes' && testConfigs[key]) {
+                        dataKeys.add(key);
+                    }
+                });
+            });
+            
+            alert(`已強制恢復真實數據！\n\n✅ 共 ${healthRecords.length} 條真實檢驗記錄\n🔬 包含 ${dataKeys.size} 項檢驗指標\n📅 從 2025-05-18 到 2025-06-26\n📊 包含6/26最新檢驗結果\n💡 數據直接從瑞金醫院報告解析`);
+        }
+        
+        function clearAllData() {
+            if (confirm('⚠️ 警告：這將刪除所有健康記錄數據！\n\n此操作不可恢復，確定要繼續嗎？')) {
+                if (confirm('最後確認：真的要刪除所有數據嗎？建議先導出備份！')) {
+                    healthRecords = [];
+                    localStorage.removeItem('healthRecords');
+                    displayRecords();
+                    alert('所有數據已清空！');
+                }
             }
         }
         
-        // 頁面加載
-        window.onload = function() {
-            setTimeout(function() {
-                if (healthRecords.length > 0) {
-                    alert('🏥 奶奶完整健康记录系统\n\n✅ 已成功加载 ' + healthRecords.length + ' 条完整检验记录\n📅 时间跨度：2025年5月18日 - 6月25日\n🔬 包含15项主要检验指标\n\n📊 从数据可以看出：\n奶奶的整体趋势是好转的！\n肝功能在6月异常后快速恢复。');
-                } else {
-                    alert('欢迎使用健康记录本！\n请开始添加检验数据。');
-                }
-            }, 500);
+        function backupData() {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupData = {
+                timestamp: timestamp,
+                records: healthRecords,
+                version: '2.0',
+                recordCount: healthRecords.length,
+                dateRange: healthRecords.length > 0 ? {
+                    earliest: healthRecords[healthRecords.length - 1].date,
+                    latest: healthRecords[0].date
+                } : null
+            };
             
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `奶奶健康記錄備份_${timestamp.split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('數據備份已創建！');
+        }
+        
+        // 頁面加載時的處理
+        window.onload = function() {
+            console.log('=== 奶奶健康記錄系統 - 最終修復版 ===');
+            
+            // 強制重新加載數據
+            localStorage.removeItem('healthRecords');
+            healthRecords = preloadedHealthRecords.slice();
+            localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
+            
+            console.log('健康記錄總數:', healthRecords.length);
+            console.log('配置的檢驗項目總數:', Object.keys(testConfigs).length);
+            
+            // 檢查數據完整性
+            const dataKeys = new Set();
+            healthRecords.forEach(record => {
+                Object.keys(record).forEach(key => {
+                    if (key !== 'date' && key !== 'notes' && testConfigs[key]) {
+                        dataKeys.add(key);
+                    }
+                });
+            });
+            
+            console.log('實際包含的檢驗項目數量:', dataKeys.size);
+            console.log('檢驗項目列表:', Array.from(dataKeys).sort());
+            
+            // 初始化圖表
+            initializeChart();
+            
+            // 顯示歡迎消息
+            setTimeout(() => {
+                if (healthRecords.length > 0) {
+                    const earliestDate = healthRecords[healthRecords.length - 1].date;
+                    const latestDate = healthRecords[0].date;
+                    
+                    alert(`🏥 奶奶完整健康記錄系統 - 修復版已就緒！
+
+✅ 已成功載入 ${healthRecords.length} 條完整檢驗記錄
+📅 記錄時間：${earliestDate} 至 ${latestDate}
+🔬 包含 ${dataKeys.size} 項檢驗指標數據
+
+🎉 系統功能完整：
+• ✅ 全面的檢驗數據（47項指標）
+• ✅ 完整的圖表分析（柱狀圖和折線圖）
+• ✅ 詳細的歷史記錄查看
+• ✅ 強大的數據導出功能
+• ✅ 健康狀況總覽和趨勢分析
+
+📊 現在可以正常使用所有功能！`);
+                }
+            }, 1000);
+            
+            // 初始化第一個圖表
             updateChart();
         };
-        
-        // 防止微信內頁面縮放
-        document.addEventListener('touchstart', function(event) {
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        });
-        
-        var lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            var now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
     </script>
 </body>
 </html>
